@@ -1,0 +1,331 @@
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px 96px;
+  min-height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  color: #8b90a0;
+  font-size: 13px;
+}
+
+/* date navigation */
+.dateBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dateLabel {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+.navBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #262833;
+  background: #121318;
+  color: #e5e7eb;
+  font-size: 18px;
+  cursor: pointer;
+  flex: none;
+}
+.navBtn:active {
+  background: #1c1e26;
+}
+.today {
+  background: none;
+  border: none;
+  color: #6ee7b7;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+/* slots */
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #24262e;
+  background: #121318;
+}
+.slotGiven {
+  border-color: #1f3a2f;
+  background: #101a15;
+}
+.slotOverdue {
+  border-color: #5b2330;
+  background: #1b1012;
+}
+.time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 18px;
+  width: 58px;
+  flex: none;
+}
+.slotMain {
+  flex: 1;
+  min-width: 0;
+}
+.name {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta {
+  font-size: 12px;
+  color: #8b90a0;
+  margin-top: 2px;
+}
+.metaGiven {
+  color: #6ee7b7;
+}
+.metaOverdue {
+  color: #fca5a5;
+  font-weight: 600;
+}
+.giveBtn {
+  flex: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #34d399;
+  color: #06281c;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.giveBtn:active {
+  background: #2bbd88;
+}
+.undoBtn {
+  flex: none;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid #2a3a32;
+  background: transparent;
+  color: #9aa6a0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.empty {
+  text-align: center;
+  color: #8b90a0;
+  padding: 40px 0;
+}
+
+/* sections */
+.section {
+  margin-top: 28px;
+}
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b90a0;
+  margin-bottom: 12px;
+}
+
+/* forms */
+.field {
+  margin-bottom: 12px;
+}
+.label {
+  display: block;
+  font-size: 13px;
+  color: #b6bac6;
+  margin-bottom: 6px;
+}
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #262833;
+  background: #0c0d12;
+  color: #e5e7eb;
+  font-size: 16px;
+}
+.input:focus {
+  outline: none;
+  border-color: #34d399;
+}
+.timeRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.timeInput {
+  flex: 1;
+}
+.removeBtn {
+  flex: none;
+  width: 44px;
+  border-radius: 12px;
+  border: 1px solid #262833;
+  background: #0c0d12;
+  color: #fca5a5;
+  font-size: 18px;
+  cursor: pointer;
+}
+.smallBtn {
+  background: none;
+  border: 1px dashed #34415a;
+  color: #9ab4e0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.durationRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid #262833;
+  background: #0c0d12;
+  color: #cdd2dd;
+  font-size: 14px;
+  cursor: pointer;
+}
+.chipActive {
+  border-color: #34d399;
+  background: #0f2a20;
+  color: #6ee7b7;
+}
+.primaryBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #34d399;
+  color: #06281c;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.error {
+  color: #fca5a5;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* manage list */
+.medItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #24262e;
+  background: #121318;
+  margin-bottom: 8px;
+}
+.medInfo {
+  flex: 1;
+  min-width: 0;
+}
+.medName {
+  font-weight: 600;
+}
+.medStopped {
+  opacity: 0.55;
+}
+.linkBtn {
+  background: none;
+  border: none;
+  color: #9aa6b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+.linkDanger {
+  color: #fca5a5;
+}
+
+/* who toggle */
+.whoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #8b90a0;
+}
+.whoBtns {
+  display: flex;
+  gap: 6px;
+}
+
+/* gate */
+.gate {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 80px 20px;
+  text-align: center;
+}
+.gateTitle {
+  font-size: 40px;
+  margin-bottom: 6px;
+}
+.gateSub {
+  color: #8b90a0;
+  margin-bottom: 24px;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin: 22px 0 14px;
+  border-bottom: 1px solid #1e2027;
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #8b90a0;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.tabActive {
+  color: #e5e7eb;
+  border-bottom-color: #34d399;
+}

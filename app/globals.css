@@ -23,11 +23,4 @@ body {
     Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-/* Hide scrollbars — the root is a full-bleed canvas. */
-body::-webkit-scrollbar {
-  display: none;
 }

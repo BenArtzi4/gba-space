@@ -48,6 +48,13 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Lock page scrolling for this full-bleed canvas page only (other routes
+    // scroll normally). Restored on unmount.
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -372,6 +379,8 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
 
     return () => {
       running = false;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
       cancelAnimationFrame(rafId);
       cancelAnimationFrame(resizeRaf);
       window.removeEventListener("pointermove", onPointerMove);
