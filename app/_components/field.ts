@@ -7,28 +7,30 @@ export interface Particle {
   vx: number; // CSS px / second
   vy: number;
   r: number; // radius in CSS px
-  /** 0 = cyan, 1 = violet; used to lerp the dot colour. */
+  /** 0 = pure white, 1 = soft silver; used to lerp the dot colour. */
   hue: number;
-  alpha: number;
+  alpha: number; // current opacity (ramps up after spawning)
+  targetAlpha: number; // opacity it settles at once fully emerged
 }
 
-const CYAN: [number, number, number] = [94, 234, 212]; // #5eead4
-const VIOLET: [number, number, number] = [167, 139, 250]; // #a78bfa
+// Clean, classic palette — white through cool silver. No colour cast.
+const WHITE: [number, number, number] = [255, 255, 255];
+const SILVER: [number, number, number] = [196, 202, 214];
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
 /** rgba() string for a particle's colour at a given alpha. */
 export function dotColor(hue: number, alpha: number): string {
-  const r = Math.round(CYAN[0] + (VIOLET[0] - CYAN[0]) * hue);
-  const g = Math.round(CYAN[1] + (VIOLET[1] - CYAN[1]) * hue);
-  const b = Math.round(CYAN[2] + (VIOLET[2] - CYAN[2]) * hue);
+  const r = Math.round(WHITE[0] + (SILVER[0] - WHITE[0]) * hue);
+  const g = Math.round(WHITE[1] + (SILVER[1] - WHITE[1]) * hue);
+  const b = Math.round(WHITE[2] + (SILVER[2] - WHITE[2]) * hue);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 /** Particle count scaled to viewport area, capped, halved for reduced motion. */
 export function particleCount(w: number, h: number, reduced: boolean): number {
-  const n = Math.round((w * h) / 14000);
-  const capped = Math.max(28, Math.min(140, n));
+  const n = Math.round((w * h) / 8000);
+  const capped = Math.max(60, Math.min(240, n));
   return reduced ? Math.round(capped / 2) : capped;
 }
 
@@ -40,17 +42,22 @@ function randomVelocity(): { vx: number; vy: number } {
 
 /** A particle placed anywhere in the viewport (used on first build). */
 export function makeParticle(w: number, h: number): Particle {
+  const targetAlpha = rand(0.18, 0.6);
   return {
     x: rand(0, w),
     y: rand(0, h),
     ...randomVelocity(),
-    r: rand(0.6, 2.2),
+    r: rand(0.5, 2.0),
     hue: Math.random(),
-    alpha: rand(0.35, 0.9),
+    alpha: targetAlpha, // already on screen
+    targetAlpha,
   };
 }
 
-/** A particle entering from a random border, heading inward — a fresh arrival. */
+/**
+ * A particle entering from a random border, heading inward — a fresh arrival.
+ * Starts fully transparent so it visibly emerges from outside the page.
+ */
 export function spawnFromEdge(w: number, h: number): Particle {
   const edge = Math.floor(rand(0, 4)); // 0 top, 1 right, 2 bottom, 3 left
   const speed = rand(8, 24);
@@ -85,7 +92,17 @@ export function spawnFromEdge(w: number, h: number): Particle {
       vy = Math.sin(spread) * speed;
       break;
   }
-  return { x, y, vx, vy, r: rand(0.6, 2.2), hue: Math.random(), alpha: rand(0.35, 0.9) };
+  const targetAlpha = rand(0.18, 0.6);
+  return {
+    x,
+    y,
+    vx,
+    vy,
+    r: rand(0.5, 2.0),
+    hue: Math.random(),
+    alpha: 0, // fades in as it enters
+    targetAlpha,
+  };
 }
 
 /** True once a particle has fully left the viewport (with margin). */

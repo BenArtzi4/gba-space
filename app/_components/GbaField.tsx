@@ -23,7 +23,6 @@ interface Glyph {
   fy: number;
   px: number; // phase offset x
   py: number;
-  color: string;
   // resolved each frame for drawing the connecting links
   x: number;
   y: number;
@@ -36,8 +35,6 @@ const LINK_DEFS = [
   { a: 1, b: 2, period: 9.0, offset: 3.2, maxAlpha: 0.5 }, // B–A
   { a: 0, b: 2, period: 15.0, offset: 6.1, maxAlpha: 0.22 }, // faint G–A arc
 ];
-
-const LETTER_COLORS = ["#5eead4", "#cfe9ff", "#a78bfa"];
 
 export default function GbaField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -82,7 +79,6 @@ export default function GbaField() {
           fy: 0.35 + i * 0.05,
           px: i * 1.7,
           py: i * 2.3 + 0.6,
-          color: LETTER_COLORS[i],
           x: ax,
           y: cy,
         });
@@ -136,8 +132,8 @@ export default function GbaField() {
         // pointer -> particle
         for (const p of near) {
           const d = Math.hypot(p.x - pointer.x, p.y - pointer.y);
-          const a = (1 - d / POINTER_R) * 0.5;
-          ctx!.strokeStyle = `rgba(150, 220, 230, ${a})`;
+          const a = (1 - d / POINTER_R) * 0.45;
+          ctx!.strokeStyle = `rgba(255, 255, 255, ${a})`;
           ctx!.lineWidth = 0.6;
           ctx!.beginPath();
           ctx!.moveTo(pointer.x, pointer.y);
@@ -151,8 +147,8 @@ export default function GbaField() {
             const dy = near[i].y - near[j].y;
             const d2 = dx * dx + dy * dy;
             if (d2 < LINK_DIST * LINK_DIST) {
-              const a = (1 - Math.sqrt(d2) / LINK_DIST) * 0.4;
-              ctx!.strokeStyle = `rgba(120, 230, 210, ${a})`;
+              const a = (1 - Math.sqrt(d2) / LINK_DIST) * 0.35;
+              ctx!.strokeStyle = `rgba(220, 226, 238, ${a})`;
               ctx!.lineWidth = 0.5;
               ctx!.beginPath();
               ctx!.moveTo(near[i].x, near[i].y);
@@ -173,10 +169,10 @@ export default function GbaField() {
         if (alpha <= 0.001) continue;
         const ga = glyphs[def.a];
         const gb = glyphs[def.b];
-        ctx!.strokeStyle = `rgba(190, 225, 235, ${alpha})`;
-        ctx!.lineWidth = 1.2;
-        ctx!.shadowBlur = 8;
-        ctx!.shadowColor = "rgba(160, 210, 235, 0.7)";
+        ctx!.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx!.lineWidth = 1;
+        ctx!.shadowBlur = 6;
+        ctx!.shadowColor = `rgba(255, 255, 255, ${alpha * 0.8})`;
         ctx!.beginPath();
         ctx!.moveTo(ga.x, ga.y);
         ctx!.lineTo(gb.x, gb.y);
@@ -184,16 +180,20 @@ export default function GbaField() {
         ctx!.shadowBlur = 0;
       }
 
-      // --- the GBA letters ---
+      // --- the GBA letters: clean white→silver, soft cool-white halo ---
       ctx!.globalCompositeOperation = "source-over";
       const size = glyphSize;
-      ctx!.font = `700 ${size}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+      ctx!.font = `600 ${size}px -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`;
       ctx!.textAlign = "center";
       ctx!.textBaseline = "middle";
+      const grad = ctx!.createLinearGradient(0, height / 2 - size * 0.6, 0, height / 2 + size * 0.6);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.55, "#f2f3f5");
+      grad.addColorStop(1, "#c4c9d4");
       for (const g of glyphs) {
-        ctx!.shadowBlur = size * 0.28;
-        ctx!.shadowColor = g.color;
-        ctx!.fillStyle = g.color;
+        ctx!.shadowBlur = size * 0.18;
+        ctx!.shadowColor = "rgba(214, 224, 255, 0.45)";
+        ctx!.fillStyle = grad;
         ctx!.fillText(g.char, g.x, g.y);
       }
       ctx!.shadowBlur = 0;
@@ -204,6 +204,11 @@ export default function GbaField() {
         const p = particles[i];
         p.x += p.vx * dt;
         p.y += p.vy * dt;
+
+        // ramp opacity up so fresh arrivals visibly emerge from outside
+        if (p.alpha < p.targetAlpha) {
+          p.alpha = Math.min(p.targetAlpha, p.alpha + dt * 0.6);
+        }
 
         // gentle repulsion from the pointer
         if (pointer.active) {
