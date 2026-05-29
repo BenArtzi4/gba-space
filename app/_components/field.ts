@@ -121,20 +121,3 @@ export function isOffscreen(p: Particle, w: number, h: number): boolean {
   const m = 16;
   return p.x < -m || p.x > w + m || p.y < -m || p.y > h + m;
 }
-
-/**
- * A 0..1 pulse used for the letter-to-letter links: stays at 0 most of the
- * cycle, then fades in, holds, and fades out — so a line "sometimes" appears
- * and then disappears. `phase` is expected in [0, 1).
- */
-export function linkPulse(phase: number): number {
-  const fadeIn = 0.08;
-  const hold = 0.06;
-  const fadeOut = 0.12;
-  if (phase < fadeIn) return phase / fadeIn;
-  if (phase < fadeIn + hold) return 1;
-  if (phase < fadeIn + hold + fadeOut) {
-    return 1 - (phase - fadeIn - hold) / fadeOut;
-  }
-  return 0; // long quiet gap
-}

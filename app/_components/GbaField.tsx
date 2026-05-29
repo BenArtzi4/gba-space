@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import {
   dotColor,
   isOffscreen,
-  linkPulse,
   makeParticle,
   particleCount,
   spawnFromEdge,
@@ -39,14 +38,6 @@ interface Spark {
   max: number; // initial life (for fade ratio)
   r: number;
 }
-
-// One entry per letter-to-letter connection. Periods/offsets differ so links
-// appear independently and never all at once.
-const LINK_DEFS = [
-  { a: 0, b: 1, period: 7.5, offset: 0.0, maxAlpha: 0.5 }, // G–B
-  { a: 1, b: 2, period: 9.0, offset: 3.2, maxAlpha: 0.5 }, // B–A
-  { a: 0, b: 2, period: 15.0, offset: 6.1, maxAlpha: 0.22 }, // faint G–A arc
-];
 
 export default function GbaField({ fontFamily }: { fontFamily: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -233,27 +224,6 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
             }
           }
         }
-      }
-
-      // --- letter-to-letter links that fade in and out over time ---
-      for (const def of LINK_DEFS) {
-        const phase = reduced
-          ? 0.5 // hold a steady faint line in reduced-motion mode
-          : (((t + def.offset) / def.period) % 1 + 1) % 1;
-        const alpha =
-          (reduced ? 0.12 : linkPulse(phase)) * def.maxAlpha;
-        if (alpha <= 0.001) continue;
-        const ga = glyphs[def.a];
-        const gb = glyphs[def.b];
-        ctx!.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx!.lineWidth = 1;
-        ctx!.shadowBlur = 6;
-        ctx!.shadowColor = `rgba(255, 255, 255, ${alpha * 0.8})`;
-        ctx!.beginPath();
-        ctx!.moveTo(ga.x, ga.y);
-        ctx!.lineTo(gb.x, gb.y);
-        ctx!.stroke();
-        ctx!.shadowBlur = 0;
       }
 
       // --- the GBA balloon letters: glossy "silver foil balloon" look ---
