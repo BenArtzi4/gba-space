@@ -5,8 +5,9 @@ living at its own route. There is intentionally **no nav and no links between pa
 every route stands on its own.
 
 - `/` — an interactive particle field with the letters **GBA** in the center
-  (drifting glyphs, a mouse-reactive dot network, and thin links between the letters
-  that fade in and out).
+  (drifting balloon glyphs, a mouse-reactive dot network, and a sparkle trail).
+- `/chase-medicine` — a passcode-gated, shared daily medicine tracker for the dog
+  (Supabase-backed; add medicines with daily times + a duration, check off doses).
 
 Built with **Next.js (App Router) + TypeScript**, deployed on **Vercel**.
 
