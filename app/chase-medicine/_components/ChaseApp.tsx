@@ -7,6 +7,7 @@ import {
   getDay,
   giveDose,
   resumeMedicine,
+  setGivenTime,
   stopMedicine,
   undoDose,
 } from "../actions";
@@ -67,6 +68,10 @@ export default function ChaseApp() {
   };
   const onUndo = async (medId: string, time: string) => {
     await undoDose(medId, date, time);
+    await refetch();
+  };
+  const onSetTime = async (medId: string, time: string, givenAtISO: string) => {
+    await setGivenTime(medId, date, time, givenAtISO);
     await refetch();
   };
   const onAdd = async (input: Parameters<typeof addMedicine>[0]) => {
@@ -139,6 +144,7 @@ export default function ChaseApp() {
           onToday={() => setDate(today)}
           onGive={onGive}
           onUndo={onUndo}
+          onSetTime={onSetTime}
         />
       )}
       {tab === "add" && <AddMedicine today={today} onAdd={onAdd} />}

@@ -92,6 +92,25 @@ export async function undoDose(
   if (error) throw new Error(error.message);
 }
 
+/** Correct the recorded time a dose was given (e.g. given at 14:00 but logged at 15:00). */
+export async function setGivenTime(
+  medicineId: string,
+  date: string,
+  time: string,
+  givenAtISO: string,
+): Promise<void> {
+  await requireUnlocked();
+  if (Number.isNaN(Date.parse(givenAtISO))) throw new Error("Invalid time");
+  const db = getSupabase();
+  const { error } = await db
+    .from("doses")
+    .update({ given_at: givenAtISO })
+    .eq("medicine_id", medicineId)
+    .eq("dose_date", date)
+    .eq("dose_time", time);
+  if (error) throw new Error(error.message);
+}
+
 export async function addMedicine(input: {
   name: string;
   times: string[];

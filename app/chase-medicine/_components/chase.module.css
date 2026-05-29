@@ -1,25 +1,76 @@
+/* ── Cool Eclectic theme ───────────────────────────────────────────────
+   bone paper · ink · deep teal (primary) · plum + ochre accents
+   headings: Fraunces (serif) · body: Inter (sans)                        */
+
+.shell {
+  --bone: #f5f4ef;
+  --paper: #fffdf8;
+  --border: #e6e0d2;
+  --ink: #23282b;
+  --muted: #6f6a60;
+  --teal: #14746f;
+  --teal-dark: #105e59;
+  --teal-tint: #eef4f2;
+  --teal-line: #c4ddd8;
+  --plum: #7b3f6b;
+  --ochre: #c98a1f;
+
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--bone);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
 .page {
   max-width: 600px;
   margin: 0 auto;
   padding: 24px 16px 96px;
-  min-height: 100dvh;
 }
 
+/* header */
 .header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(201, 138, 31, 0.4); /* ochre rule */
 }
 .title {
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
   letter-spacing: -0.01em;
 }
 .subtitle {
-  color: #8b90a0;
+  color: var(--muted);
   font-size: 13px;
+  font-style: italic;
+}
+
+/* tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.tabActive {
+  color: var(--ink);
+  border-bottom-color: var(--teal);
 }
 
 /* date navigation */
@@ -40,20 +91,21 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid #262833;
-  background: #121318;
-  color: #e5e7eb;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 18px;
   cursor: pointer;
   flex: none;
 }
 .navBtn:active {
-  background: #1c1e26;
+  background: #f0ece0;
 }
 .today {
+  display: block;
   background: none;
   border: none;
-  color: #6ee7b7;
+  color: var(--teal);
   font-size: 13px;
   cursor: pointer;
   padding: 4px 6px;
@@ -71,16 +123,17 @@
   gap: 14px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid #24262e;
-  background: #121318;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgba(40, 30, 20, 0.05);
 }
 .slotGiven {
-  border-color: #1f3a2f;
-  background: #101a15;
+  border-color: var(--teal-line);
+  background: var(--teal-tint);
 }
 .slotOverdue {
-  border-color: #5b2330;
-  background: #1b1012;
+  border-color: #e8b878;
+  background: #fdf0e3;
 }
 .time {
   font-variant-numeric: tabular-nums;
@@ -102,45 +155,87 @@
 }
 .meta {
   font-size: 12px;
-  color: #8b90a0;
+  color: var(--muted);
   margin-top: 2px;
 }
 .metaGiven {
-  color: #6ee7b7;
+  color: var(--teal);
 }
 .metaOverdue {
-  color: #fca5a5;
+  color: #b4530e;
   font-weight: 600;
+}
+.editLink {
+  background: none;
+  border: none;
+  color: var(--plum);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  text-decoration: underline;
+}
+.editRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.editInput {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+}
+.saveBtn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--teal);
+  color: #f3faf8;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cancelBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
 }
 .giveBtn {
   flex: none;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 999px;
   border: none;
-  background: #34d399;
-  color: #06281c;
+  background: var(--teal);
+  color: #f3faf8;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
 }
 .giveBtn:active {
-  background: #2bbd88;
+  background: var(--teal-dark);
 }
 .undoBtn {
   flex: none;
   padding: 9px 14px;
   border-radius: 999px;
-  border: 1px solid #2a3a32;
+  border: 1px solid var(--border);
   background: transparent;
-  color: #9aa6a0;
+  color: var(--muted);
   font-size: 13px;
   cursor: pointer;
 }
 
 .empty {
   text-align: center;
-  color: #8b90a0;
+  color: var(--muted);
   padding: 40px 0;
+  font-style: italic;
 }
 
 /* sections */
@@ -148,11 +243,11 @@
   margin-top: 28px;
 }
 .sectionTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #8b90a0;
+  letter-spacing: 0.08em;
+  color: var(--plum);
   margin-bottom: 12px;
 }
 
@@ -163,21 +258,22 @@
 .label {
   display: block;
   font-size: 13px;
-  color: #b6bac6;
+  color: var(--muted);
   margin-bottom: 6px;
 }
 .input {
   width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid #262833;
-  background: #0c0d12;
-  color: #e5e7eb;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 16px;
 }
 .input:focus {
   outline: none;
-  border-color: #34d399;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(20, 116, 111, 0.18);
 }
 .timeRow {
   display: flex;
@@ -191,16 +287,16 @@
   flex: none;
   width: 44px;
   border-radius: 12px;
-  border: 1px solid #262833;
-  background: #0c0d12;
-  color: #fca5a5;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: #b4530e;
   font-size: 18px;
   cursor: pointer;
 }
 .smallBtn {
   background: none;
-  border: 1px dashed #34415a;
-  color: #9ab4e0;
+  border: 1px dashed var(--teal);
+  color: var(--teal);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 13px;
@@ -214,16 +310,16 @@
 .chip {
   padding: 9px 14px;
   border-radius: 999px;
-  border: 1px solid #262833;
-  background: #0c0d12;
-  color: #cdd2dd;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 14px;
   cursor: pointer;
 }
 .chipActive {
-  border-color: #34d399;
-  background: #0f2a20;
-  color: #6ee7b7;
+  border-color: var(--teal);
+  background: var(--teal-tint);
+  color: var(--teal);
 }
 .primaryBtn {
   width: 100%;
@@ -231,8 +327,8 @@
   padding: 14px;
   border-radius: 12px;
   border: none;
-  background: #34d399;
-  color: #06281c;
+  background: var(--teal);
+  color: #f3faf8;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
@@ -242,7 +338,7 @@
   cursor: default;
 }
 .error {
-  color: #fca5a5;
+  color: #b4231e;
   font-size: 13px;
   margin-top: 8px;
 }
@@ -254,8 +350,8 @@
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid #24262e;
-  background: #121318;
+  border: 1px solid var(--border);
+  background: var(--paper);
   margin-bottom: 8px;
 }
 .medInfo {
@@ -271,13 +367,13 @@
 .linkBtn {
   background: none;
   border: none;
-  color: #9aa6b8;
+  color: var(--teal);
   font-size: 13px;
   cursor: pointer;
   padding: 6px 8px;
 }
 .linkDanger {
-  color: #fca5a5;
+  color: #b4231e;
 }
 
 /* who toggle */
@@ -285,9 +381,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
   font-size: 13px;
-  color: #8b90a0;
+  color: var(--muted);
 }
 .whoBtns {
   display: flex;
@@ -298,34 +394,16 @@
 .gate {
   max-width: 360px;
   margin: 0 auto;
-  padding: 80px 20px;
+  padding: 96px 20px;
   text-align: center;
 }
 .gateTitle {
-  font-size: 40px;
+  font-size: 52px;
   margin-bottom: 6px;
 }
 .gateSub {
-  color: #8b90a0;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 20px;
+  color: var(--ink);
   margin-bottom: 24px;
-}
-.tabs {
-  display: flex;
-  gap: 6px;
-  margin: 22px 0 14px;
-  border-bottom: 1px solid #1e2027;
-}
-.tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: #8b90a0;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 10px;
-  cursor: pointer;
-}
-.tabActive {
-  color: #e5e7eb;
-  border-bottom-color: #34d399;
 }
