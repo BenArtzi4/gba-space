@@ -36,7 +36,7 @@ const LINK_DEFS = [
   { a: 0, b: 2, period: 15.0, offset: 6.1, maxAlpha: 0.22 }, // faint G–A arc
 ];
 
-export default function GbaField() {
+export default function GbaField({ fontFamily }: { fontFamily: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -62,26 +62,35 @@ export default function GbaField() {
 
     function buildGlyphs() {
       glyphs.length = 0;
-      const size = Math.max(64, Math.min(240, Math.min(width, height) * 0.2));
+      const size = Math.max(64, Math.min(220, Math.min(width, height) * 0.2));
       glyphSize = size;
-      const spacing = size * 0.7;
       const cx = width / 2;
       const cy = height / 2;
+
+      // Measure real glyph widths (the balloon font is wide) so letters are
+      // spaced without overlapping — this also guarantees the G/B/A order.
+      ctx!.font = `${size}px ${fontFamily}`;
+      const widths = LETTERS.split("").map((c) => ctx!.measureText(c).width);
+      const gap = size * 0.06;
+      const total =
+        widths.reduce((a, b) => a + b, 0) + gap * (LETTERS.length - 1);
+      let x = cx - total / 2;
       for (let i = 0; i < LETTERS.length; i++) {
-        const ax = cx + (i - 1) * spacing;
+        const centerX = x + widths[i] / 2;
         glyphs.push({
           char: LETTERS[i],
-          ax,
+          ax: centerX,
           ay: cy,
-          ampX: size * 0.06, // small enough that letters never reorder
-          ampY: size * 0.1,
+          ampX: size * 0.035, // small drift, never enough to reorder
+          ampY: size * 0.06,
           fx: 0.25 + i * 0.07,
           fy: 0.35 + i * 0.05,
           px: i * 1.7,
           py: i * 2.3 + 0.6,
-          x: ax,
+          x: centerX,
           y: cy,
         });
+        x += widths[i] + gap;
       }
     }
 
@@ -180,23 +189,33 @@ export default function GbaField() {
         ctx!.shadowBlur = 0;
       }
 
-      // --- the GBA letters: clean white→silver, soft cool-white halo ---
+      // --- the GBA balloon letters: glossy "silver foil balloon" look ---
+      // A banded vertical gradient fakes a glossy reflection, and a soft dark
+      // drop shadow lifts the puffy glyphs off the background for a 3D feel.
       ctx!.globalCompositeOperation = "source-over";
       const size = glyphSize;
-      ctx!.font = `600 ${size}px -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`;
+      ctx!.font = `${size}px ${fontFamily}`;
       ctx!.textAlign = "center";
       ctx!.textBaseline = "middle";
-      const grad = ctx!.createLinearGradient(0, height / 2 - size * 0.6, 0, height / 2 + size * 0.6);
-      grad.addColorStop(0, "#ffffff");
-      grad.addColorStop(0.55, "#f2f3f5");
-      grad.addColorStop(1, "#c4c9d4");
+      const top = height / 2 - size * 0.6;
+      const grad = ctx!.createLinearGradient(0, top, 0, top + size * 1.2);
+      grad.addColorStop(0.0, "#ffffff"); // top highlight
+      grad.addColorStop(0.18, "#eef1f6");
+      grad.addColorStop(0.44, "#c3c9d6"); // mid shade
+      grad.addColorStop(0.52, "#eaeef5"); // glossy sheen band
+      grad.addColorStop(0.78, "#a9b0c1"); // lower shade
+      grad.addColorStop(1.0, "#d0d5df"); // bottom catch-light
       for (const g of glyphs) {
-        ctx!.shadowBlur = size * 0.18;
-        ctx!.shadowColor = "rgba(214, 224, 255, 0.45)";
+        ctx!.shadowColor = "rgba(0, 0, 0, 0.55)";
+        ctx!.shadowBlur = size * 0.12;
+        ctx!.shadowOffsetX = size * 0.015;
+        ctx!.shadowOffsetY = size * 0.06;
         ctx!.fillStyle = grad;
         ctx!.fillText(g.char, g.x, g.y);
       }
       ctx!.shadowBlur = 0;
+      ctx!.shadowOffsetX = 0;
+      ctx!.shadowOffsetY = 0;
     }
 
     function step(dt: number) {
@@ -285,6 +304,18 @@ export default function GbaField() {
     };
 
     resize();
+
+    // The balloon font is a web font; make sure it's loaded, then re-measure
+    // the glyph layout (and redraw, for the static reduced-motion case).
+    const firstFamily = fontFamily.split(",")[0];
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.load(`64px ${firstFamily}`).catch(() => {});
+      document.fonts.ready.then(() => {
+        buildGlyphs();
+        if (reduced) drawScene(performance.now() / 1000);
+      });
+    }
+
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("blur", onPointerLeave);
@@ -307,7 +338,7 @@ export default function GbaField() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [fontFamily]);
 
   return (
     <canvas
