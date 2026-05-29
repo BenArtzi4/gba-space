@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# gba-space
 
-## Getting Started
+A personal **digital garden** — one site hosting many unrelated little projects, each
+living at its own route. There is intentionally **no nav and no links between pages**;
+every route stands on its own.
 
-First, run the development server:
+- `/` — an interactive particle field with the letters **GBA** in the center
+  (drifting glyphs, a mouse-reactive dot network, and thin links between the letters
+  that fade in and out).
+
+Built with **Next.js (App Router) + TypeScript**, deployed on **Vercel**.
+
+## Develop
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Add a new "page" / mini-project
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Each project is a self-contained folder under `app/`. To add one at, say, `/chart`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  chart/
+    page.tsx            # the route — required
+    _components/         # co-locate this route's code here (the _ keeps it out of routing)
+    layout.tsx          # optional: add one for full visual isolation from other routes
+```
 
-## Learn More
+Rules of the garden:
 
-To learn more about Next.js, take a look at the following resources:
+- A route **must not import** from another route's folder. Keep them independent.
+- The only shared things are `app/layout.tsx` (root `<html>`/`<body>`) and
+  `app/globals.css` (base background/colors). Override styling per-route as needed.
+- Reusable pieces for the root page live in `app/_components/`
+  (`GbaField.tsx` = the canvas, `field.ts` = pure simulation math).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Then commit, push, and merge to `main` — it deploys automatically and becomes
+`https://<your-domain>/chart`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy (Vercel, free)
 
-## Deploy on Vercel
+Connected to Vercel's GitHub integration:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Every push to **`main`** → production deploy.
+- Every branch / PR → its own **preview URL**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+First-time setup: import this repo at [vercel.com/new](https://vercel.com/new)
+(Next.js is auto-detected, zero config), or use the CLI:
+
+```bash
+npm i -g vercel
+vercel login
+vercel link
+```
+
+## Notes
+
+- The root page respects `prefers-reduced-motion` (renders a calm static scene) and
+  pauses its animation loop when the tab is hidden.
