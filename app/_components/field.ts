@@ -2,7 +2,7 @@
 // No DOM/canvas access here — just data + math, so the logic is easy to reason about.
 
 export interface Particle {
-  x: number;
+  x: number; // drift position (never touched by the pointer)
   y: number;
   vx: number; // CSS px / second
   vy: number;
@@ -11,6 +11,9 @@ export interface Particle {
   hue: number;
   alpha: number; // current opacity (ramps up after spawning)
   targetAlpha: number; // opacity it settles at once fully emerged
+  dispX: number; // on-screen position = drift + pointer "parting" offset
+  dispY: number;
+  boost: number; // 0..1 proximity to pointer, for brighten/enlarge
 }
 
 // Clean, classic palette — white through cool silver. No colour cast.
@@ -29,8 +32,8 @@ export function dotColor(hue: number, alpha: number): string {
 
 /** Particle count scaled to viewport area, capped, halved for reduced motion. */
 export function particleCount(w: number, h: number, reduced: boolean): number {
-  const n = Math.round((w * h) / 8000);
-  const capped = Math.max(60, Math.min(240, n));
+  const n = Math.round((w * h) / 6000);
+  const capped = Math.max(80, Math.min(320, n));
   return reduced ? Math.round(capped / 2) : capped;
 }
 
@@ -43,14 +46,19 @@ function randomVelocity(): { vx: number; vy: number } {
 /** A particle placed anywhere in the viewport (used on first build). */
 export function makeParticle(w: number, h: number): Particle {
   const targetAlpha = rand(0.18, 0.6);
+  const x = rand(0, w);
+  const y = rand(0, h);
   return {
-    x: rand(0, w),
-    y: rand(0, h),
+    x,
+    y,
     ...randomVelocity(),
     r: rand(0.5, 2.0),
     hue: Math.random(),
     alpha: targetAlpha, // already on screen
     targetAlpha,
+    dispX: x,
+    dispY: y,
+    boost: 0,
   };
 }
 
@@ -102,6 +110,9 @@ export function spawnFromEdge(w: number, h: number): Particle {
     hue: Math.random(),
     alpha: 0, // fades in as it enters
     targetAlpha,
+    dispX: x,
+    dispY: y,
+    boost: 0,
   };
 }
 

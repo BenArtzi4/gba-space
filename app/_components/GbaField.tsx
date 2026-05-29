@@ -28,6 +28,18 @@ interface Glyph {
   y: number;
 }
 
+// Short-lived sparkle left in the pointer's wake — the little reward that
+// makes you want to keep moving.
+interface Spark {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number; // seconds remaining
+  max: number; // initial life (for fade ratio)
+  r: number;
+}
+
 // One entry per letter-to-letter connection. Periods/offsets differ so links
 // appear independently and never all at once.
 const LINK_DEFS = [
@@ -56,9 +68,14 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
     const glyphs: Glyph[] = [];
     let glyphSize = 0;
     const pointer = { x: 0, y: 0, active: false };
+    const sparks: Spark[] = [];
+    let lastSparkX = 0;
+    let lastSparkY = 0;
 
     const POINTER_R = 175; // influence radius (CSS px)
     const LINK_DIST = 115; // max particle-particle link length near pointer
+    const PARTING = 64; // max px the cursor pushes a dot aside
+    const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 
     function buildGlyphs() {
       glyphs.length = 0;
@@ -121,47 +138,97 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
       ctx!.clearRect(0, 0, width, height);
       resolveGlyphs(t);
 
-      // --- particles + their glow, using additive blending ---
+      // --- on-screen positions: drift + a soft "parting" push away from the
+      //     pointer. This never alters velocity, so dots flow back in behind
+      //     the cursor and the field never empties out. ---
+      for (const p of particles) {
+        if (pointer.active) {
+          const dx = p.x - pointer.x;
+          const dy = p.y - pointer.y;
+          const dist = Math.hypot(dx, dy) || 0.0001;
+          if (dist < POINTER_R) {
+            const f = 1 - dist / POINTER_R;
+            const push = f * f * PARTING;
+            p.dispX = p.x + (dx / dist) * push;
+            p.dispY = p.y + (dy / dist) * push;
+            p.boost = f;
+            continue;
+          }
+        }
+        p.dispX = p.x;
+        p.dispY = p.y;
+        p.boost = 0;
+      }
+
+      // --- particles (additive glow); brighter + larger near the cursor ---
       ctx!.globalCompositeOperation = "lighter";
       for (const p of particles) {
+        const a = Math.min(1, p.alpha + p.boost * 0.5);
         ctx!.beginPath();
-        ctx!.fillStyle = dotColor(p.hue, p.alpha);
-        ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx!.fillStyle = dotColor(p.hue, a);
+        ctx!.arc(p.dispX, p.dispY, p.r + p.boost * 1.1, 0, Math.PI * 2);
         ctx!.fill();
       }
 
-      // --- interactive links near the pointer ---
+      // --- sparkle trail left by the moving pointer ---
+      for (const s of sparks) {
+        const k = s.life / s.max;
+        ctx!.beginPath();
+        ctx!.fillStyle = `rgba(255, 255, 255, ${k * 0.9})`;
+        ctx!.arc(s.x, s.y, s.r * k, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+
+      // --- soft glow halo following the cursor ---
+      if (pointer.active) {
+        const halo = ctx!.createRadialGradient(
+          pointer.x,
+          pointer.y,
+          0,
+          pointer.x,
+          pointer.y,
+          POINTER_R * 0.6,
+        );
+        halo.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+        halo.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx!.fillStyle = halo;
+        ctx!.beginPath();
+        ctx!.arc(pointer.x, pointer.y, POINTER_R * 0.6, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+
+      // --- constellation links near the pointer (using on-screen positions) ---
       if (pointer.active) {
         const near: Particle[] = [];
         for (const p of particles) {
-          const dx = p.x - pointer.x;
-          const dy = p.y - pointer.y;
+          const dx = p.dispX - pointer.x;
+          const dy = p.dispY - pointer.y;
           if (dx * dx + dy * dy < POINTER_R * POINTER_R) near.push(p);
         }
         // pointer -> particle
         for (const p of near) {
-          const d = Math.hypot(p.x - pointer.x, p.y - pointer.y);
+          const d = Math.hypot(p.dispX - pointer.x, p.dispY - pointer.y);
           const a = (1 - d / POINTER_R) * 0.45;
           ctx!.strokeStyle = `rgba(255, 255, 255, ${a})`;
           ctx!.lineWidth = 0.6;
           ctx!.beginPath();
           ctx!.moveTo(pointer.x, pointer.y);
-          ctx!.lineTo(p.x, p.y);
+          ctx!.lineTo(p.dispX, p.dispY);
           ctx!.stroke();
         }
         // particle <-> particle (only among the near set — cheap)
         for (let i = 0; i < near.length; i++) {
           for (let j = i + 1; j < near.length; j++) {
-            const dx = near[i].x - near[j].x;
-            const dy = near[i].y - near[j].y;
+            const dx = near[i].dispX - near[j].dispX;
+            const dy = near[i].dispY - near[j].dispY;
             const d2 = dx * dx + dy * dy;
             if (d2 < LINK_DIST * LINK_DIST) {
               const a = (1 - Math.sqrt(d2) / LINK_DIST) * 0.35;
               ctx!.strokeStyle = `rgba(220, 226, 238, ${a})`;
               ctx!.lineWidth = 0.5;
               ctx!.beginPath();
-              ctx!.moveTo(near[i].x, near[i].y);
-              ctx!.lineTo(near[j].x, near[j].y);
+              ctx!.moveTo(near[i].dispX, near[i].dispY);
+              ctx!.lineTo(near[j].dispX, near[j].dispY);
               ctx!.stroke();
             }
           }
@@ -226,37 +293,24 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
 
         // ramp opacity up so fresh arrivals visibly emerge from outside
         if (p.alpha < p.targetAlpha) {
-          p.alpha = Math.min(p.targetAlpha, p.alpha + dt * 0.6);
+          p.alpha = Math.min(p.targetAlpha, p.alpha + dt * 1.4);
         }
 
-        // gentle repulsion from the pointer
-        if (pointer.active) {
-          const dx = p.x - pointer.x;
-          const dy = p.y - pointer.y;
-          const dist = Math.hypot(dx, dy) || 0.0001;
-          if (dist < POINTER_R) {
-            const force = (1 - dist / POINTER_R) * 1400;
-            p.vx += (dx / dist) * force * dt;
-            p.vy += (dy / dist) * force * dt;
-          }
-        }
-
-        // clamp top speed, then ease back toward a calm drift speed
-        const speed = Math.hypot(p.vx, p.vy);
-        const MAX = 110;
-        const BASE = 18;
-        if (speed > MAX) {
-          p.vx = (p.vx / speed) * MAX;
-          p.vy = (p.vy / speed) * MAX;
-        } else if (speed > BASE) {
-          const next = Math.max(BASE, speed - 40 * dt);
-          p.vx = (p.vx / speed) * next;
-          p.vy = (p.vy / speed) * next;
-        }
-
+        // drift off an edge -> re-enter from a random border (steady in/out)
         if (isOffscreen(p, width, height)) {
           particles[i] = spawnFromEdge(width, height);
         }
+      }
+
+      // age the sparkle trail
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i];
+        s.life -= dt;
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vx *= 0.96;
+        s.vy *= 0.96;
+        if (s.life <= 0) sparks.splice(i, 1);
       }
     }
 
@@ -279,6 +333,24 @@ export default function GbaField({ fontFamily }: { fontFamily: string }) {
       pointer.x = e.clientX;
       pointer.y = e.clientY;
       pointer.active = true;
+      if (reduced) return;
+      // drop a sparkle every few px of travel (capped so it stays light)
+      const dx = pointer.x - lastSparkX;
+      const dy = pointer.y - lastSparkY;
+      if (dx * dx + dy * dy > 64 && sparks.length < 90) {
+        lastSparkX = pointer.x;
+        lastSparkY = pointer.y;
+        const life = rnd(0.4, 0.85);
+        sparks.push({
+          x: pointer.x + rnd(-3, 3),
+          y: pointer.y + rnd(-3, 3),
+          vx: rnd(-20, 20),
+          vy: rnd(-20, 20),
+          life,
+          max: life,
+          r: rnd(1, 2.4),
+        });
+      }
     };
     const onPointerLeave = () => {
       pointer.active = false;
