@@ -199,6 +199,8 @@ scaffolder appends it; you can also edit by hand.
 ## Environment variables
 
 - Secrets live in env vars only — never commit them. Local dev uses `.env.local`.
+  The tracked `.env.example` documents the variable **names** (never values) — add a line
+  there when a space introduces a new env var.
 - Set production values in the Vercel dashboard or via `vercel env`.
 - Common ones: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and per-space passcodes like
   `MYSPACE_CODE`.
