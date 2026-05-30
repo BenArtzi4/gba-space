@@ -95,18 +95,23 @@ Connected to Vercel's GitHub integration:
 - Every push to **`main`** → production deploy.
 - Every branch / PR → its own **preview URL**.
 
-New spaces need no deploy config — they ship with the next push. Per-space environment
-variables (e.g. `SUPABASE_URL`, passcodes) are set in the Vercel dashboard or via
-`vercel env`.
+New spaces need no deploy config — they ship with the next push.
 
-First-time setup: import this repo at [vercel.com/new](https://vercel.com/new)
-(Next.js is auto-detected, zero config), or use the CLI:
+### Environment variables (Vercel CLI)
+
+The repo is linked to the Vercel project (`vercel link` — `.vercel/` is gitignored), so
+per-space secrets (`SUPABASE_*`, passcodes like `SPACES_CODE` or `<SLUG>_CODE`) are managed
+with the CLI:
 
 ```bash
-npm i -g vercel
-vercel login
-vercel link
+vercel env pull .env.local          # sync all dev env vars down to .env.local
+vercel env add SPACES_CODE production   # add/set a secret (prompts for the value)
+vercel env ls                       # see what's set, per environment
 ```
+
+After adding or changing a production env var, redeploy for it to take effect
+(`vercel --prod`, or push to `main`). Values can also be managed in the Vercel dashboard.
+First-time setup on a fresh machine: `npm i -g vercel && vercel login && vercel link`.
 
 ## Notes
 

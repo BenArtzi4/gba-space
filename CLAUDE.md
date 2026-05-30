@@ -67,9 +67,11 @@ whole point of this repo's setup.
    `/<slug>` (e.g. `npm run dev`). When it's ready to be public, set `status: "live"` so it
    appears in `/spaces` and the sitemap; keep `"wip"`/`"private"`/`hidden` otherwise.
 
-7. **Secrets discipline.** Never commit secrets. `.env.local` is gitignored; real values
-   go in the **Vercel dashboard** (or `vercel env`). Code/docs reference env-var *names*
-   only. Sanity-check the diff before committing.
+7. **Secrets discipline.** Never commit secrets. `.env.local` is gitignored. The repo is
+   linked to Vercel, so set real values with `vercel env add <NAME> production` (or the
+   dashboard) and `vercel env pull .env.local` to sync down; add the *name* to
+   `.env.example`. Code/docs reference env-var *names* only. Sanity-check the diff before
+   committing.
 
 8. **Ship if asked.** If the user wants it deployed: branch off `main`, commit, push, open
    a PR with `gh`, verify checks are green, then merge — merging to `main` auto-deploys to

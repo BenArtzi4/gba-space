@@ -213,10 +213,14 @@ scaffolder appends it; you can also edit by hand.
 - Secrets live in env vars only — never commit them. Local dev uses `.env.local`.
   The tracked `.env.example` documents the variable **names** (never values) — add a line
   there when a space introduces a new env var.
-- Set production values in the Vercel dashboard or via `vercel env`.
+- The repo is linked to Vercel, so manage values with the CLI (or the dashboard):
+  - `vercel env pull .env.local` — sync existing env vars down for local dev.
+  - `vercel env add <NAME> production` — add a secret (e.g. `<SLUG>_CODE` for a new
+    passcode gate, or `SUPABASE_*`). Redeploy (`vercel --prod` / push to `main`) to apply.
 - Common ones: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, per-space passcodes like
   `MYSPACE_CODE`, and `SPACES_CODE` (the passcode for the owner overview at `/all`).
-- Keep `BASE_URL` in `app/sitemap.ts` in sync with `metadataBase` in `app/layout.tsx`.
+- Keep `BASE_URL` in `app/sitemap.xml/route.ts` in sync with `metadataBase` in
+  `app/layout.tsx`.
 
 ## Pre-deploy checklist
 
