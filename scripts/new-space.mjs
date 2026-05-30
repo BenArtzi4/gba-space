@@ -17,7 +17,14 @@ const APP_DIR = join(ROOT, "app");
 const REGISTRY = join(APP_DIR, "_lib", "spaces.ts");
 
 // Route segments that are taken by framework files or existing infrastructure.
-const RESERVED = new Set(["spaces", "api", "_lib", "_components", "sitemap"]);
+const RESERVED = new Set([
+  "spaces",
+  "all",
+  "api",
+  "_lib",
+  "_components",
+  "sitemap",
+]);
 
 function fail(msg) {
   console.error(`\n✖ ${msg}\n`);

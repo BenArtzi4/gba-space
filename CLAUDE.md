@@ -5,6 +5,12 @@
 This repo is **one Next.js app hosting many independent "spaces"** — each a self-contained
 page or mini-app served at `/<slug>`. Almost every request here is "add a new space."
 
+**Meta routes** (don't recreate these): `/sitemap.xml` = machine sitemap for crawlers
+(`app/sitemap.xml/route.ts`, styled by `public/sitemap.xsl`); `/spaces` = public directory
+of live spaces; `/all` = owner-only (passcode `SPACES_CODE`) overview of every route with
+drift detection, backed by the auto-generated `app/_lib/routes.generated.ts` (written by
+`scripts/scan-routes.mjs` on `predev`/`prebuild` — never edit it by hand).
+
 ## When this applies (trigger)
 
 Treat **any** of these as a request to create a new space, and follow the workflow below:
