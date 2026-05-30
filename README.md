@@ -7,9 +7,22 @@ the ones you choose to list.
 
 - `/` — an interactive particle field with the letters **GBA** in the center
   (drifting balloon glyphs, a mouse-reactive dot network, and a sparkle trail).
-- `/spaces` — a directory of the spaces you mark public in the registry.
+- `/spaces` — public directory of the spaces you mark `live` in the registry.
+- `/all` — **owner-only** (passcode) overview of *every* route, built from the live
+  app + registry, with drift warnings. Your private command center.
 - `/chase-medicine` — a passcode-gated, shared daily medicine tracker for the dog
   (Supabase-backed; add medicines with daily times + a duration, check off doses).
+
+### Three ways to "see what's here"
+
+| Route           | Audience      | Shows                                            |
+| --------------- | ------------- | ------------------------------------------------ |
+| `/sitemap.xml`  | search engines| Live routes, as XML (styled for humans via XSL). |
+| `/spaces`       | the public    | Live spaces, as a directory.                     |
+| `/all`          | you (passcode)| **Everything** — live, wip, private + drift.     |
+
+`/sitemap.xml` looking like raw data is correct — it's a machine file for crawlers; the
+human pages are `/spaces` and `/all`.
 
 Built with **Next.js (App Router) + TypeScript**, deployed on **Vercel**.
 

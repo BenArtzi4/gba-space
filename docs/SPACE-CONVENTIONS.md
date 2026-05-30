@@ -192,7 +192,19 @@ scaffolder appends it; you can also edit by hand.
 
 - `status: "wip"` and `status: "private"` (and `hidden: true`) are **excluded** from the
   `/spaces` directory and the sitemap. Flip to `"live"` when ready.
-- `publicSpaces()` drives both `/spaces` and `app/sitemap.ts`, so listing is automatic.
+- `publicSpaces()` drives both `/spaces` and `/sitemap.xml`, so the public listing is
+  automatic.
+
+## Meta routes (how to "see what exists")
+
+- **`/sitemap.xml`** (`app/sitemap.xml/route.ts`) — machine sitemap for crawlers, live
+  routes only. An XSL stylesheet (`public/sitemap.xsl`) makes it readable in a browser.
+- **`/spaces`** — public human directory, live routes only.
+- **`/all`** — owner-only (passcode `SPACES_CODE`) overview of **every** route. It merges
+  the registry with `app/_lib/routes.generated.ts` — an auto-generated manifest of route
+  folders written by `scripts/scan-routes.mjs` on every `predev`/`prebuild`. This is what
+  surfaces **drift**: a folder with no registry entry ("not in registry") or a registry
+  entry with no folder ("folder missing"). Don't edit `routes.generated.ts` by hand.
 
 ---
 
@@ -202,8 +214,8 @@ scaffolder appends it; you can also edit by hand.
   The tracked `.env.example` documents the variable **names** (never values) — add a line
   there when a space introduces a new env var.
 - Set production values in the Vercel dashboard or via `vercel env`.
-- Common ones: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and per-space passcodes like
-  `MYSPACE_CODE`.
+- Common ones: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, per-space passcodes like
+  `MYSPACE_CODE`, and `SPACES_CODE` (the passcode for the owner overview at `/all`).
 - Keep `BASE_URL` in `app/sitemap.ts` in sync with `metadataBase` in `app/layout.tsx`.
 
 ## Pre-deploy checklist

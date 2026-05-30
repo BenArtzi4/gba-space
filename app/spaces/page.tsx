@@ -19,10 +19,17 @@ export default function SpacesDirectory() {
         <p className={s.lede}>
           Little corners of the internet that live here.
         </p>
+        {list.length > 0 && (
+          <p className={s.count}>
+            {list.length} {list.length === 1 ? "space" : "spaces"}
+          </p>
+        )}
       </header>
 
       {list.length === 0 ? (
-        <p className={s.empty}>Nothing public yet — check back soon.</p>
+        <p className={s.empty}>
+          Nothing public yet — new spaces show up here once they go live.
+        </p>
       ) : (
         <ul className={s.grid}>
           {list.map((space) => (
@@ -33,7 +40,10 @@ export default function SpacesDirectory() {
                   {space.title}
                 </span>
                 <span className={s.cardDesc}>{space.description}</span>
-                <span className={s.cardSlug}>/{space.slug}</span>
+                <span className={s.cardFoot}>
+                  <code className={s.cardSlug}>/{space.slug}</code>
+                  <span className={s.cardAdded}>{space.added}</span>
+                </span>
               </Link>
             </li>
           ))}

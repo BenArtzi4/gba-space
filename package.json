@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/scan-routes.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/scan-routes.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "new-space": "node scripts/new-space.mjs"
+    "new-space": "node scripts/new-space.mjs",
+    "scan-routes": "node scripts/scan-routes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
