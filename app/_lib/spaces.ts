@@ -30,6 +30,16 @@ export interface Space {
 
 export const spaces: Space[] = [
   {
+    slug: "app-arena",
+    title: "App Arena",
+    description: "Pitch app ideas and score each other 1–100.",
+    status: "private",
+    added: "2026-06-07",
+    hidden: true,
+    emoji: "🏆",
+  },
+
+  {
     slug: "chase-medicine",
     title: "Chase",
     description: "Shared dog-medicine schedule tracker.",
