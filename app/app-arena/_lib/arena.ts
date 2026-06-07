@@ -11,16 +11,32 @@ export const USER_COLORS: Record<User, string> = {
   Gal: "#fbbf24", // amber
 };
 
-/** Emoji a player can toggle on an idea — the only way to "comment". */
+/**
+ * Emoji a player can toggle on an idea — the only way to "comment".
+ * Deliberately the weirdest, most cryptic emoji we could find: half the fun is
+ * nobody having any idea what they're supposed to mean.
+ */
 export const REACTIONS = [
-  "🔥",
-  "❤️",
-  "😂",
-  "🤯",
-  "👏",
-  "🚀",
-  "💡",
-  "👎",
+  "🫥", // dotted line face
+  "🧿", // nazar amulet
+  "🪬", // hamsa
+  "🪤", // mousetrap
+  "🪠", // plunger
+  "🪦", // headstone
+  "🫀", // anatomical heart
+  "🫁", // lungs
+  "🪨", // rock
+  "🪵", // wood
+  "🩻", // x-ray
+  "🪅", // piñata
+  "🪆", // nesting dolls
+  "🫚", // ginger root
+  "🫛", // pea pod
+  "🛟", // ring buoy
+  "🪈", // flute
+  "🫎", // moose
+  "🪿", // goose
+  "🫏", // donkey
 ] as const;
 export type ReactionEmoji = (typeof REACTIONS)[number];
 
