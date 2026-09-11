@@ -11,11 +11,16 @@ export const HEBREW_YEAR = "תשפ״ז";
 /** Rotating header greetings. One is chosen per page load. */
 export const GREETINGS: readonly string[] = [
   "שנה טובה ומתוקה",
-  "לשנה טובה תיכתבו ותיחתמו",
-  "שנה טובה ומבורכת",
   "כתיבה וחתימה טובה",
-  "תזכו לשנים רבות",
+  "שנת בריאות ואושר",
+  "חג שמח ושנה נפלאה",
+  "שנת שפע והצלחה",
+  "שנה של התחלות חדשות",
+  "שנת שלום ושלווה",
+  "שנה של בשורות טובות",
 ];
+
+export const GREETING_EMOJI = "🍯";
 
 /**
  * From the piyyut "אחות קטנה" (אברהם חזן גירונדי, ספרד, המאה ה-13), sung on

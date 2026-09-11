@@ -8,6 +8,7 @@ import {
   FACTS,
   FAMILIES_GREETING,
   GREETINGS,
+  GREETING_EMOJI,
   HEBREW_YEAR,
   HERO_LINE,
   SIMANIM,
@@ -175,7 +176,12 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
           קריוקי
         </h1>
 
-        <p className={s.greeting}>{GREETINGS[greetingIndex]}</p>
+        <p className={s.greeting}>
+          {GREETINGS[greetingIndex]}
+          <span className={s.greetingEmoji} aria-hidden="true">
+            {GREETING_EMOJI}
+          </span>
+        </p>
         <p className={s.families}>{FAMILIES_GREETING}</p>
         <p className={s.hero}>{HERO_LINE}</p>
 

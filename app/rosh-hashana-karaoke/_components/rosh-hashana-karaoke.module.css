@@ -162,6 +162,14 @@
   color: var(--pom-deep);
 }
 
+.greetingEmoji {
+  /* Sits at the inline end, so in RTL it lands to the left of the words. */
+  margin-inline-start: 0.4rem;
+  font-size: 0.95em;
+  display: inline-block;
+  filter: drop-shadow(0 0.15rem 0.4rem rgba(240, 169, 60, 0.45));
+}
+
 /* The families celebrating together — the warmest line on the page, so it gets
    a card of its own rather than sitting as another paragraph. */
 .families {
