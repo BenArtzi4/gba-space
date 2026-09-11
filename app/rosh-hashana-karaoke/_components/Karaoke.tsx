@@ -200,6 +200,10 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
             </li>
           ))}
         </ul>
+
+        <p className={s.fact}>
+          <span className={s.factLabel}>{FACT_LABEL}</span> {FACTS[factIndex]}
+        </p>
       </header>
 
       <div className={s.controls}>
@@ -315,9 +319,6 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
       </div>
 
       <footer className={s.footer}>
-        <p className={s.fact}>
-          <span className={s.factLabel}>{FACT_LABEL}</span> {FACTS[factIndex]}
-        </p>
         <p className={s.blessing}>{CLOSING_BLESSING}</p>
         <p className={s.signoff} aria-hidden="true">
           🍎 🍯 🎤 📯

@@ -274,6 +274,10 @@
 .searchField {
   position: relative;
   flex: 1 1 auto;
+  /* Required. A flex item defaults to min-width:auto, so this would refuse to
+     shrink below the input's intrinsic width and shove the non-shrinkable
+     button off the inline edge on narrow phones. */
+  min-width: 0;
   display: flex;
   align-items: center;
   background: var(--cream);
@@ -520,12 +524,20 @@
   text-align: center;
 }
 
+/* Sits in the header now, directly under the greeting block, so it carries its
+   own card rather than borrowing the footer's background. */
 .fact {
   font-size: 0.8125rem;
   line-height: 1.85;
   color: var(--muted);
   max-width: 34rem;
   margin-inline: auto;
+  margin-block-start: 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-wrap: pretty;
 }
 
 .factLabel {
@@ -534,7 +546,6 @@
 }
 
 .blessing {
-  margin-block-start: 1.75rem;
   font-family: var(--font-suez), Georgia, serif;
   font-size: clamp(1.375rem, 6vw, 2rem);
   line-height: 1.4;
@@ -549,6 +560,39 @@
   margin-block-start: 0.5rem;
   font-size: 1.25rem;
   letter-spacing: 0.2em;
+}
+
+/* ── Phones ──────────────────────────────────────────────────────────────── */
+/* One hand, held at arm's length, in a noisy room. Touch targets clear 44px
+   and the search row gets the full width rather than competing with the
+   button. */
+
+@media (max-width: 30rem) {
+  .searchRow {
+    flex-wrap: wrap;
+  }
+  .searchField {
+    flex: 1 1 100%;
+  }
+  .surprise {
+    flex: 1 1 100%;
+    padding-block: 0.8rem;
+    font-size: 0.9375rem;
+  }
+  .chip {
+    padding-block: 0.6rem;
+    padding-inline: 0.9rem;
+    font-size: 0.875rem;
+  }
+  .filterRow {
+    justify-content: flex-start;
+  }
+  .count {
+    flex-basis: 100%;
+  }
+  .siman {
+    padding: 0.45rem 0.8rem;
+  }
 }
 
 /* ── Larger screens ──────────────────────────────────────────────────────── */
