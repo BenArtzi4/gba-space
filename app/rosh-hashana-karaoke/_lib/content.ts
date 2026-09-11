@@ -71,9 +71,19 @@ export const FACTS: readonly string[] = [
   "ראש השנה הוא החג היהודי היחיד שחל בתחילת החודש (א׳ בתשרי), בדיוק כאשר הירח ״מתכסה״ וכמעט ואינו נראה בשמיים.",
 ];
 
-/** The families celebrating together this year. */
-export const FAMILIES_GREETING =
-  "שנה טובה למשפחת נאור · נחום · קומסקי · נחמד · בן ארצי";
+/**
+ * The families celebrating together this year. Split so the names can be held
+ * on a single unbroken line even on the narrowest phones, with the lead phrase
+ * wrapping above them instead.
+ */
+export const FAMILIES_LEAD = "שנה טובה למשפחת";
+export const FAMILY_NAMES: readonly string[] = [
+  "נאור",
+  "נחום",
+  "קומסקי",
+  "נחמד",
+  "בן ארצי",
+];
 
 /** The closing blessing. */
 export const CLOSING_BLESSING = `שנה טובה ומתוקה לכולנו · ${HEBREW_YEAR}`;

@@ -176,15 +176,29 @@
   display: inline-block;
   margin-block-start: 0.875rem;
   font-family: var(--font-suez), Georgia, serif;
-  font-size: clamp(0.9375rem, 3.8vw, 1.25rem);
   line-height: 1.6;
   color: var(--honey-deep);
   background: linear-gradient(135deg, var(--cream), var(--pom-soft));
   border: 1px solid var(--border-2);
   border-radius: var(--radius);
   padding: 0.6rem 1.1rem;
-  text-wrap: balance;
   box-shadow: var(--shadow-sm);
+}
+
+.familiesLead {
+  display: block;
+  font-size: clamp(0.8125rem, 3.2vw, 1.0625rem);
+  opacity: 0.85;
+}
+
+/* The names must never break across lines. The vw term shrinks them to fit the
+   narrowest phones; the rem cap stops them growing past the lead phrase on
+   wide screens. */
+.familiesNames {
+  display: block;
+  white-space: nowrap;
+  font-size: min(1.25rem, 4.6vw);
+  letter-spacing: 0;
 }
 
 .hero {
@@ -593,6 +607,10 @@
   .siman {
     padding: 0.45rem 0.8rem;
   }
+  /* Trim the side padding so the unbroken names line has the most room. */
+  .families {
+    padding-inline: 0.6rem;
+  }
 }
 
 /* ── Larger screens ──────────────────────────────────────────────────────── */
@@ -679,8 +697,13 @@
   }
   /* The vw-based clamps top out well below television scale. */
   .families {
-    font-size: 1.75rem;
     padding: 0.85rem 1.5rem;
+  }
+  .familiesLead {
+    font-size: 1.375rem;
+  }
+  .familiesNames {
+    font-size: 2rem;
   }
   .greeting {
     font-size: 2.25rem;
