@@ -7,7 +7,8 @@ import {
   CLOSING_BLESSING,
   FACTS,
   FACT_LABEL,
-  FAMILIES_GREETING,
+  FAMILIES_LEAD,
+  FAMILY_NAMES,
   GREETINGS,
   GREETING_EMOJI,
   HEBREW_YEAR,
@@ -183,7 +184,11 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
             {GREETING_EMOJI}
           </span>
         </p>
-        <p className={s.families}>{FAMILIES_GREETING}</p>
+        <p className={s.families}>
+          <span className={s.familiesLead}>{FAMILIES_LEAD}</span>
+          {/* nowrap: the names stay on one unbroken line at every width. */}
+          <span className={s.familiesNames}>{FAMILY_NAMES.join(" · ")}</span>
+        </p>
         <p className={s.hero}>{HERO_LINE}</p>
 
         <ul className={s.simanim}>
