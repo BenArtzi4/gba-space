@@ -14,8 +14,6 @@ export interface Song {
   title: string;
   /** Script of the *artist* name — drives the HE/EN filter, not the title. */
   lang: SongLang;
-  /** Optional curated badge (e.g. a suggested opener). */
-  note?: string;
 }
 
 export const SONGS: Song[] = [
@@ -28,7 +26,7 @@ export const SONGS: Song[] = [
   { n: 7, artist: "אייל גולן", title: "עיר נמל", lang: "he" },
   { n: 8, artist: "אלה לי", title: "זוט עני", lang: "he" },
   { n: 9, artist: "אלה לי", title: "מה אתה רוצה", lang: "he" },
-  { n: 10, artist: "אריק איינשטיין", title: "אני ואתה", lang: "he", note: "שיר פתיחה מומלץ" },
+  { n: 10, artist: "אריק איינשטיין", title: "אני ואתה", lang: "he" },
   { n: 11, artist: "אתניקס", title: "ב.מ.וו שחורה", lang: "he" },
   { n: 12, artist: "אתניקס", title: "מחר אני בבית", lang: "he" },
   { n: 13, artist: "אתניקס", title: "ציפור מדבר", lang: "he" },
@@ -117,7 +115,7 @@ export const SONGS: Song[] = [
   { n: 96, artist: "שב\"ק ס", title: "נופל וקם", lang: "he" },
   { n: 97, artist: "שב\"ק ס", title: "תתקעו בחצוצרה", lang: "he" },
   { n: 98, artist: "שוטי הנבואה", title: "קול גלגל", lang: "he" },
-  { n: 99, artist: "שולי נתן (או נעמי שמר)", title: "ירושלים של זהב", lang: "he", note: "שיר סיום" },
+  { n: 99, artist: "שולי נתן (או נעמי שמר)", title: "ירושלים של זהב", lang: "he" },
   { n: 100, artist: "שלומי שבת", title: "בראשית עולם", lang: "he" },
   { n: 101, artist: "שלומי שבת", title: "ואני שר", lang: "he" },
   { n: 102, artist: "שלומי שבת", title: "שתדעי", lang: "he" },
