@@ -6,6 +6,7 @@ import { isNumericQuery, normalize } from "../_lib/search";
 import {
   CLOSING_BLESSING,
   FACTS,
+  FACT_LABEL,
   FAMILIES_GREETING,
   GREETINGS,
   GREETING_EMOJI,
@@ -315,7 +316,7 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
 
       <footer className={s.footer}>
         <p className={s.fact}>
-          <span className={s.factLabel}>ידעתם?</span> {FACTS[factIndex]}
+          <span className={s.factLabel}>{FACT_LABEL}</span> {FACTS[factIndex]}
         </p>
         <p className={s.blessing}>{CLOSING_BLESSING}</p>
         <p className={s.signoff} aria-hidden="true">
