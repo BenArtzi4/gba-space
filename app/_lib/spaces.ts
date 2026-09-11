@@ -30,6 +30,15 @@ export interface Space {
 
 export const spaces: Space[] = [
   {
+    slug: "rosh-hashana-karaoke",
+    title: "קריוקי ראש השנה",
+    description: "רשימת שירי הקריוקי שלנו לראש השנה תשפ״ז — בחרו מספר.",
+    status: "live",
+    added: "2026-09-11",
+    emoji: "🎤",
+  },
+
+  {
     slug: "app-arena",
     title: "App Arena",
     description: "Pitch app ideas and score each other 1–100.",

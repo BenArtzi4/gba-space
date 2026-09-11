@@ -1,0 +1,748 @@
+/* ── קריוקי ראש השנה תשפ״ז ─────────────────────────────────────────────────
+   Bright and celebratory: honey, apple red and a warm cream wash on white.
+   Display: Suez One (single weight) · body + UI: Heebo (variable).
+
+   Two rules that drive most of the choices below:
+   • Hebrew gets letter-spacing 0, never negative. Tight tracking degrades the
+     ד/ר and ו/ן/ז distinctions, and Hebrew is unicase so text-transform is a
+     no-op on 105 of the 112 songs and would only mangle the 7 English ones.
+   • Everything directional uses logical properties, so the same rules serve
+     the RTL Hebrew rows and the LTR English ones.                           */
+
+.shell {
+  --bg: #ffffff;
+  --cream: #fff7ea;
+  --cream-2: #fff1dc;
+
+  /* Fill tones — vivid, used as backgrounds and never as small text. */
+  --honey: #f0a93c;
+  --honey-soft: #ffe0a8;
+  --pom: #d8304a;
+  --pom-soft: #ffd6dc;
+  --leaf: #6f9f3f;
+
+  /* Text tones — darkened until they clear 4.5:1 on white. */
+  --honey-deep: #8a5a0c;
+  --pom-deep: #a81b30;
+
+  --text: #241a12;
+  --muted: #756450;
+
+  --border: #f0e2cd;
+  --border-2: #e3cda9;
+
+  --radius: 1rem;
+  --radius-lg: 1.75rem;
+
+  --shadow-sm: 0 1px 2px rgba(120, 80, 20, 0.06);
+  --shadow: 0 0.5rem 1.5rem rgba(150, 95, 25, 0.1);
+
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  /* The global stylesheet sets a dark base; this space opts out entirely, so
+     form controls and scrollbars need to be told too. */
+  color-scheme: light;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-heebo), system-ui, -apple-system, sans-serif;
+  /* Hebrew has minimal ascenders/descenders and looks cramped at leading that
+     flatters Latin. */
+  line-height: 1.65;
+  /* clip, not hidden: `overflow-x: hidden` forces the other axis to `auto`,
+     which makes this element a scroll container and silently breaks the sticky
+     search bar inside it. `clip` contains overflow without that side effect. */
+  overflow-x: clip;
+}
+
+/* A soft, cheerful wash behind the header — light and airy rather than a dark
+   ambient mesh. Fixed so it never scrolls into the list. */
+.shell::before {
+  content: "";
+  position: fixed;
+  inset-inline: -20%;
+  top: -35%;
+  height: 90vh;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 74% 40%, rgba(240, 169, 60, 0.3), transparent 70%),
+    radial-gradient(40% 44% at 26% 34%, rgba(216, 48, 74, 0.16), transparent 70%),
+    radial-gradient(34% 38% at 52% 62%, rgba(255, 214, 220, 0.5), transparent 72%);
+  filter: blur(12px);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(-2.5%, -1.5%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(2.5%, 2%, 0) scale(1.1);
+  }
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* One long single-column list, so the measure stays readable no matter how
+     wide the screen is. */
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(0.875rem, 3vw, 1.5rem) 4rem;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.header {
+  text-align: center;
+  padding-block-end: 1.5rem;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--honey-deep);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  letter-spacing: 0;
+}
+
+.title {
+  margin-block-start: 1rem;
+  font-family: var(--font-suez), Georgia, serif;
+  font-size: clamp(2.75rem, 13vw, 4.5rem);
+  font-weight: 400;
+  /* Zero, not negative — see the note at the top of this file. */
+  letter-spacing: 0;
+  line-height: 1.15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(120deg, var(--pom) 0%, var(--honey) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-block-end: 0.08em;
+}
+
+.titleMark {
+  font-size: 0.62em;
+  -webkit-text-fill-color: initial;
+  color: initial;
+  filter: drop-shadow(0 0.25rem 0.75rem rgba(216, 48, 74, 0.3));
+  animation: wiggle 4s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0deg);
+  }
+  92% {
+    transform: rotate(-11deg);
+  }
+  96% {
+    transform: rotate(9deg);
+  }
+}
+
+.greeting {
+  margin-block-start: 0.5rem;
+  font-family: var(--font-suez), Georgia, serif;
+  font-size: clamp(1.25rem, 5.5vw, 1.75rem);
+  color: var(--pom-deep);
+}
+
+/* The families celebrating together — the warmest line on the page, so it gets
+   a card of its own rather than sitting as another paragraph. */
+.families {
+  display: inline-block;
+  margin-block-start: 0.875rem;
+  font-family: var(--font-suez), Georgia, serif;
+  font-size: clamp(0.9375rem, 3.8vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--honey-deep);
+  background: linear-gradient(135deg, var(--cream), var(--pom-soft));
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 0.6rem 1.1rem;
+  text-wrap: balance;
+  box-shadow: var(--shadow-sm);
+}
+
+.hero {
+  margin-block-start: 0.625rem;
+  font-size: clamp(0.875rem, 3.2vw, 1.0625rem);
+  line-height: 1.8;
+  color: var(--muted);
+  text-wrap: balance;
+}
+
+.simanim {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-block-start: 1.5rem;
+}
+
+.siman {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: default;
+  transition: transform 150ms ease-out;
+}
+.siman:hover {
+  transform: translateY(-2px);
+}
+
+.simanEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.simanSvg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.simanLabel {
+  white-space: nowrap;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-block: 0.75rem;
+  margin-inline: calc(clamp(0.875rem, 3vw, 1.5rem) * -1);
+  padding-inline: clamp(0.875rem, 3vw, 1.5rem);
+  /* Translucent chrome with content scrolling underneath, rather than an
+     opaque bar that eats a fixed strip of the screen. */
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* A soft scroll edge where content meets the floating chrome, rather than a
+   hard 1px divider. */
+.controls::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 1.5rem;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), transparent);
+}
+
+.searchRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.searchField {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  background: var(--cream);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+.searchField:focus-within {
+  border-color: var(--honey);
+  box-shadow: 0 0 0 3px rgba(240, 169, 60, 0.22);
+}
+
+.searchIcon {
+  padding-inline-start: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  /* Must stay at least 16px or iOS Safari zooms the viewport on focus — and
+     this is the one control everybody touches. */
+  font-size: 1rem;
+  padding: 0.75rem;
+  outline: none;
+}
+.searchInput::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+.searchInput::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clearButton {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  padding-inline: 0.75rem;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+.clearButton:hover {
+  color: var(--pom-deep);
+}
+
+.surprise {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--honey), var(--pom));
+  border: 0;
+  border-radius: var(--radius);
+  padding-inline: 1rem;
+  padding-block: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  /* Symmetric shadow: box-shadow offsets are physical and do not flip in RTL,
+     so keeping X at 0 means never having to think about direction. */
+  box-shadow: 0 0.375rem 1rem rgba(216, 48, 74, 0.3);
+  /* Feedback belongs on the press, and it has to be instant. */
+  transition:
+    transform 100ms ease-out,
+    box-shadow 150ms ease-out;
+}
+.surprise:hover {
+  box-shadow: 0 0.5rem 1.375rem rgba(216, 48, 74, 0.38);
+}
+.surprise:active {
+  transform: scale(0.97);
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 0.625rem;
+}
+
+.chips {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.chip {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  transition:
+    transform 100ms ease-out,
+    color 150ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out;
+}
+.chip:hover {
+  border-color: var(--border-2);
+}
+.chip:active {
+  transform: scale(0.96);
+}
+.chipOn {
+  color: #fff;
+  background: linear-gradient(135deg, var(--honey), var(--pom));
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.count {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ── Song list ───────────────────────────────────────────────────────────── */
+/* One continuous column — deliberately not split into columns, so the numbers
+   run 1…112 straight down the page. */
+
+.list {
+  margin-block-start: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.artist {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--honey-deep);
+  letter-spacing: 0;
+  /* text-align: start, never right — "right" would visibly break the seven
+     English rows inside this otherwise RTL page. */
+  text-align: start;
+  padding-block: 0.35rem;
+  padding-inline-start: 0.25rem;
+  margin-block-end: 0.375rem;
+  border-block-end: 2px solid var(--honey-soft);
+}
+
+.songs {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: start;
+  background: var(--cream);
+  border: 1px solid transparent;
+  border-radius: 0.875rem;
+  padding: 0.625rem 0.75rem;
+  transition:
+    background-color 300ms ease-out,
+    border-color 300ms ease-out;
+}
+
+.badge {
+  flex-shrink: 0;
+  /* Fixed width beats tabular-nums alone here: tnum support is inconsistent
+     across Hebrew webfonts, this is deterministic. */
+  min-width: 2.5rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--honey), #e8873a);
+  border-radius: 0.625rem;
+  padding-block: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-sm);
+}
+
+.rowText {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.songTitle {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-align: start;
+}
+
+.note {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--pom-deep);
+  background: var(--pom-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Where the random button lands. Also the reduced-motion stand-in for the
+   seed burst, so the button still visibly does something. */
+.rowFlash {
+  background: var(--honey-soft);
+  border-color: var(--honey);
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.emptyEmoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+.emptyTitle {
+  font-family: var(--font-suez), Georgia, serif;
+  font-size: 1.25rem;
+}
+.emptyBody {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin-block-end: 0.5rem;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.footer {
+  margin-block-start: 3rem;
+  padding: 1.75rem 1.25rem;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.fact {
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.factLabel {
+  color: var(--pom-deep);
+  font-weight: 700;
+}
+
+.blessing {
+  margin-block-start: 1.75rem;
+  font-family: var(--font-suez), Georgia, serif;
+  font-size: clamp(1.375rem, 6vw, 2rem);
+  line-height: 1.4;
+  background: linear-gradient(120deg, var(--pom) 0%, var(--honey) 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-block-end: 0.12em;
+}
+
+.signoff {
+  margin-block-start: 0.5rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.2em;
+}
+
+/* ── Larger screens ──────────────────────────────────────────────────────── */
+/* The list stays one column at every size; only the type and spacing grow, so
+   a laptop and a television both get a readable page with no toggle. */
+
+@media (min-width: 48rem) {
+  .page {
+    max-width: 48rem;
+  }
+  .songTitle {
+    font-size: 1.0625rem;
+  }
+  .badge {
+    font-size: 1.0625rem;
+    min-width: 2.75rem;
+  }
+  .artist {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .page {
+    max-width: 56rem;
+  }
+  .songTitle {
+    font-size: 1.25rem;
+  }
+  .badge {
+    font-size: 1.25rem;
+    min-width: 3.25rem;
+    padding-block: 0.3rem;
+  }
+  .artist {
+    font-size: 1.125rem;
+  }
+  .row {
+    padding: 0.8rem 1rem;
+  }
+  .note {
+    font-size: 0.8125rem;
+  }
+  .fact {
+    font-size: 1rem;
+    max-width: 46rem;
+  }
+}
+
+/* Television distance. A TV reports a laptop-like width but is viewed from
+   metres away, so everything steps up again at the top end. */
+@media (min-width: 100rem) {
+  .page {
+    max-width: 72rem;
+  }
+  .songTitle {
+    font-size: 1.75rem;
+  }
+  .badge {
+    font-size: 1.75rem;
+    min-width: 4.5rem;
+    border-radius: 0.875rem;
+  }
+  .artist {
+    font-size: 1.5rem;
+  }
+  .row {
+    padding: 1rem 1.25rem;
+    border-radius: 1.125rem;
+  }
+  .note {
+    font-size: 1.0625rem;
+  }
+  .count,
+  .chip {
+    font-size: 1.125rem;
+  }
+  .searchInput {
+    font-size: 1.375rem;
+  }
+  .surprise {
+    font-size: 1.25rem;
+  }
+  .siman {
+    font-size: 1.0625rem;
+  }
+  .fact {
+    font-size: 1.25rem;
+    max-width: 58rem;
+  }
+  /* The vw-based clamps top out well below television scale. */
+  .families {
+    font-size: 1.75rem;
+    padding: 0.85rem 1.5rem;
+  }
+  .greeting {
+    font-size: 2.25rem;
+  }
+  .hero {
+    font-size: 1.4rem;
+  }
+  .blessing {
+    font-size: 2.75rem;
+  }
+}
+
+/* ── Accessibility ───────────────────────────────────────────────────────── */
+
+.surprise:focus-visible,
+.chip:focus-visible,
+.clearButton:focus-visible {
+  outline: 2px solid var(--pom-deep);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell::before,
+  .titleMark {
+    animation: none;
+  }
+  .surprise,
+  .chip,
+  .siman {
+    transition: color 150ms ease-out, background-color 150ms ease-out;
+  }
+  .surprise:active,
+  .chip:active,
+  .siman:hover {
+    transform: none;
+  }
+}
+
+/* Frostier, not transparent, when the OS asks for less translucency. */
+@media (prefers-reduced-transparency: reduce) {
+  .controls {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .shell {
+    --muted: #4f4234;
+    --border: #cbb094;
+    --border-2: #a9855a;
+  }
+  .row {
+    border-color: var(--border);
+  }
+}
+
+/* ── Print ───────────────────────────────────────────────────────────────── */
+/* Insurance for one paper copy at the table, not a designed artifact. */
+
+@media print {
+  .shell::before,
+  .controls,
+  .simanim,
+  .hero,
+  .fact,
+  .signoff {
+    display: none !important;
+  }
+  .page {
+    max-width: none;
+  }
+  .songs {
+    gap: 0;
+  }
+  .row,
+  .group {
+    break-inside: avoid;
+  }
+  .row {
+    background: none;
+    border: 0;
+    padding: 0.1rem 0;
+  }
+  .badge {
+    background: none;
+    box-shadow: none;
+    color: #000;
+    text-align: start;
+  }
+  .title,
+  .blessing {
+    -webkit-text-fill-color: #000;
+    color: #000;
+  }
+  .footer {
+    background: none;
+    border: 0;
+  }
+}

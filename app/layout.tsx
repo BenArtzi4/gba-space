@@ -27,8 +27,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    // Browser extensions (Grammarly, and similar) inject attributes onto <html>
+    // and <body> before React hydrates, which React then reports as a mismatch.
+    // Verified: the server HTML ships these tags bare. Suppression is scoped to
+    // these two elements' attributes only — it does not hide real mismatches in
+    // the tree below.
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
