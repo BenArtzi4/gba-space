@@ -480,16 +480,6 @@
   text-align: start;
 }
 
-.note {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--pom-deep);
-  background: var(--pom-soft);
-  border-radius: 999px;
-  padding: 0.1rem 0.55rem;
-  white-space: nowrap;
-}
-
 /* Where the random button lands. Also the reduced-motion stand-in for the
    seed burst, so the button still visibly does something. */
 .rowFlash {
@@ -599,9 +589,6 @@
   .row {
     padding: 0.8rem 1rem;
   }
-  .note {
-    font-size: 0.8125rem;
-  }
   .fact {
     font-size: 1rem;
     max-width: 46rem;
@@ -628,9 +615,6 @@
   .row {
     padding: 1rem 1.25rem;
     border-radius: 1.125rem;
-  }
-  .note {
-    font-size: 1.0625rem;
   }
   .count,
   .chip {

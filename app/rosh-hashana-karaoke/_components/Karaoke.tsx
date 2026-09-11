@@ -304,7 +304,6 @@ export default function Karaoke({ songs }: { songs: Song[] }) {
                       <span className={s.songTitle} dir="auto">
                         {song.title}
                       </span>
-                      {song.note && <span className={s.note}>{song.note}</span>}
                     </span>
                   </li>
                 ))}

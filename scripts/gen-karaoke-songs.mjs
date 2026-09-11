@@ -24,23 +24,15 @@ const english = parsed
 
 const ordered = [...hebrew, ...english];
 
-// Curated badges surfaced on the page.
-const NOTES = {
-  "אריק איינשטיין|אני ואתה": "שיר פתיחה מומלץ",
-  "שולי נתן (או נעמי שמר)|ירושלים של זהב": "שיר סיום",
-};
-
 const rows = ordered
   .map((s, idx) => {
     const n = idx + 1;
-    const note = NOTES[s.artist + "|" + s.title];
-    const notePart = note ? ", note: " + JSON.stringify(note) : "";
     return (
       "  { n: " + n +
       ", artist: " + JSON.stringify(s.artist) +
       ", title: " + JSON.stringify(s.title) +
       ", lang: " + JSON.stringify(s.lang) +
-      notePart + " },"
+      " },"
     );
   })
   .join("\n");
@@ -62,8 +54,6 @@ const header = [
   "  title: string;",
   "  /** Script of the *artist* name — drives the HE/EN filter, not the title. */",
   "  lang: SongLang;",
-  "  /** Optional curated badge (e.g. a suggested opener). */",
-  "  note?: string;",
   "}",
   "",
   "export const SONGS: Song[] = [",
@@ -79,6 +69,3 @@ const footer = [
 writeFileSync("app/rosh-hashana-karaoke/_lib/songs.ts", header + "\n" + rows + "\n" + footer, "utf8");
 
 console.log("wrote " + ordered.length + " songs | " + hebrew.length + " he + " + english.length + " en");
-const noted = ordered.filter((s) => NOTES[s.artist + "|" + s.title]);
-console.log("notes attached: " + noted.length);
-noted.forEach((s) => console.log("   #" + (ordered.indexOf(s) + 1) + " " + s.artist + " - " + s.title));
