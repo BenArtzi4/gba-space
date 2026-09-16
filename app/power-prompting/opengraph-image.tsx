@@ -58,14 +58,14 @@ export default async function Image() {
         <div
           style={{
             width: 1080,
-            height: 510,
+            height: 470,
             display: "flex",
             flexDirection: "column",
             borderRadius: 32,
             background: "#1d1d1f",
             border: "2px solid rgba(255,255,255,0.08)",
             boxShadow: "0 40px 120px rgba(0,0,0,0.6)",
-            padding: "36px 60px 44px",
+            padding: "36px 60px 40px",
           }}
         >
           {/* traffic lights */}
@@ -113,30 +113,6 @@ export default async function Image() {
             </div>
           </div>
 
-          {/* output line */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 22,
-              color: "rgba(255,255,255,0.6)",
-              fontSize: 34,
-              letterSpacing: -0.5,
-            }}
-          >
-            <span style={{ color: ORANGE }}>$</span>
-            <span>bring sally up · bring sally down · hold</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              marginTop: 14,
-              color: "rgba(255,255,255,0.32)",
-              fontSize: 26,
-            }}
-          >
-            gal × ofir · push-up challenge
-          </div>
         </div>
       </div>
     ),
