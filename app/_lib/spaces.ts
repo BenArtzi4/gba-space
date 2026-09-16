@@ -30,6 +30,17 @@ export interface Space {
 
 export const spaces: Space[] = [
   {
+    slug: "power-prompting",
+    title: "Power Prompting",
+    description:
+      "Bring Sally Up push-up challenge tracker for Gal & Ofir: start the song, survive, log the time.",
+    status: "private",
+    hidden: true,
+    emoji: "💪",
+    added: "2026-09-16",
+  },
+
+  {
     slug: "rosh-hashana-karaoke",
     title: "קריוקי ראש השנה",
     description: "רשימת שירי הקריוקי שלנו לראש השנה תשפ״ז — בחרו מספר.",
