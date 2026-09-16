@@ -14,11 +14,11 @@ import {
   type Athlete,
 } from "../_lib/challenge";
 import { loadYouTubeApi, YT_STATE, type YTPlayer } from "../_lib/youtube";
+import { burstConfetti } from "./confetti";
 import s from "./power-prompting.module.css";
 
 type Phase =
-  | "loading" // fetching the YouTube player
-  | "countdown" // 3-2-1-GO on a black screen
+  | "countdown" // 3-2-1-GO on a black screen (the player warms up meanwhile)
   | "blocked" // the browser refused to autoplay: needs a tap
   | "live" // song playing, clock running
   | "finishing" // everyone stopped: short undo window before we save
@@ -46,14 +46,17 @@ const PLAY_WATCHDOG_MS = 2500;
 const BUFFER_GRACE_MS = 5000;
 const CLOCK_TICK_MS = 100;
 const CONFIRM_MS = 4000;
+const LEAVE_MS = 220;
 
-type TimerKey = "grace" | "undo" | "watchdog" | "confirm";
+type TimerKey = "grace" | "undo" | "watchdog" | "confirm" | "leave";
 
 export default function Arena() {
   const router = useRouter();
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayer | null>(null);
-  const phaseRef = useRef<Phase>("loading");
+  const playerReadyRef = useRef(false);
+  const goPendingRef = useRef(false);
+  const phaseRef = useRef<Phase>("countdown");
   const stopsRef = useRef<Stops>({});
   const undoableRef = useRef<Athlete | null>(null);
   const startedAtRef = useRef<string | null>(null);
@@ -63,7 +66,7 @@ export default function Arena() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const onStateRef = useRef<(state: number) => void>(() => {});
 
-  const [phase, setPhaseState] = useState<Phase>("loading");
+  const [phase, setPhaseState] = useState<Phase>("countdown");
   const [count, setCount] = useState(COUNTDOWN_FROM);
   const [clock, setClock] = useState(0);
   const [songLength, setSongLengthState] = useState(0);
@@ -73,6 +76,7 @@ export default function Arena() {
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [round, setRound] = useState(0); // bumps on every GO → replays slam-in
 
   // ── small helpers that keep refs and state in sync ────────────────────────
@@ -195,6 +199,11 @@ export default function Arena() {
       setStops(next);
       setUndoable(athlete);
       setTimer("undo", () => setUndoable(null), UNDO_MS);
+      try {
+        navigator.vibrate?.(20);
+      } catch {
+        /* ignore */
+      }
       if (ATHLETES.every((a) => next[a] !== undefined)) {
         setPhase("finishing");
         setTimer("grace", () => finish("all-stopped"), GRACE_MS);
@@ -220,7 +229,12 @@ export default function Arena() {
 
   const startPlayback = useCallback(() => {
     const p = playerRef.current;
-    if (!p) return;
+    if (!p || !playerReadyRef.current) {
+      // The player is still warming up: play the moment it's ready.
+      goPendingRef.current = true;
+      return;
+    }
+    goPendingRef.current = false;
     awaitingPlayRef.current = true;
     try {
       // Skip the intro: the clock starts with the song.
@@ -267,6 +281,17 @@ export default function Arena() {
     setPhase("countdown");
   }, [clearTimer, setPhase, setStops, setUndoable]);
 
+  const goHome = useCallback(() => {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      playerRef.current?.pauseVideo();
+    } catch {
+      /* ignore */
+    }
+    setTimer("leave", () => router.push(ROUTES.home), LEAVE_MS);
+  }, [leaving, router, setTimer]);
+
   const exit = useCallback(() => {
     const ph = phaseRef.current;
     const mid = ph === "countdown" || ph === "live" || ph === "finishing";
@@ -275,13 +300,8 @@ export default function Arena() {
       setTimer("confirm", () => setConfirmExit(false), CONFIRM_MS);
       return;
     }
-    try {
-      playerRef.current?.pauseVideo();
-    } catch {
-      /* ignore */
-    }
-    router.push(ROUTES.home);
-  }, [confirmExit, router, setTimer]);
+    goHome();
+  }, [confirmExit, goHome, setTimer]);
 
   // Player events need the latest handlers without re-creating the player.
   useEffect(() => {
@@ -316,10 +336,11 @@ export default function Arena() {
     };
   }, [clearTimer, elapsed, finish, readSongLength, setPhase, setSongLength]);
 
-  // ── mount: load the YouTube player ────────────────────────────────────────
+  // ── mount: load the YouTube player while the countdown already runs ──────
   useEffect(() => {
     // Release the black <html> ground the launch transition set.
     document.documentElement.style.backgroundColor = "";
+    router.prefetch(ROUTES.home);
     const host = hostRef.current;
     if (!host) return;
     let cancelled = false;
@@ -355,8 +376,8 @@ export default function Arena() {
               if (Number.isFinite(d) && d > SONG_START_SECONDS) {
                 setSongLength(d - SONG_START_SECONDS);
               }
-              setCount(COUNTDOWN_FROM);
-              setPhase("countdown");
+              playerReadyRef.current = true;
+              if (goPendingRef.current) startPlayback();
             },
             onStateChange: (e) => {
               if (!cancelled) onStateRef.current(e.data);
@@ -383,6 +404,7 @@ export default function Arena() {
         /* ignore */
       }
       playerRef.current = null;
+      playerReadyRef.current = false;
       target.remove();
       for (const id of Object.values(timerStore)) {
         if (id) window.clearTimeout(id);
@@ -390,7 +412,7 @@ export default function Arena() {
       wakeLockRef.current?.release().catch(() => {});
       wakeLockRef.current = null;
     };
-  }, [setPhase, setSongLength]);
+  }, [router, setPhase, setSongLength, startPlayback]);
 
   // ── countdown: 3 → 2 → 1 → GO (play) ──────────────────────────────────────
   useEffect(() => {
@@ -462,14 +484,14 @@ export default function Arena() {
   }, []);
 
   const progress = songLength > 0 ? Math.min(1, clock / songLength) : 0;
-  const dark =
-    phase === "loading" ||
-    phase === "countdown" ||
-    phase === "blocked" ||
-    phase === "error";
+  const dark = phase === "countdown" || phase === "blocked" || phase === "error";
 
   return (
-    <div className={`${s.arena} ${running || phase === "finished" ? s.arenaLive : ""}`}>
+    <div
+      className={`${s.arena} ${running || phase === "finished" ? s.arenaLive : ""} ${
+        leaving ? s.arenaLeaving : ""
+      }`}
+    >
       <header className={s.arenaBar}>
         <button
           type="button"
@@ -480,21 +502,10 @@ export default function Arena() {
         </button>
 
         <div className={s.arenaClock} aria-live="off">
-          <span
-            className={`${s.livePill} ${running ? s.livePillOn : ""}`}
-            aria-label={running ? "Live" : "Paused"}
-          >
-            <span className={s.liveDot} />
-            {phase === "finished" ? "DONE" : running ? "LIVE" : "READY"}
-          </span>
           <span className={s.clockDigits}>{formatSeconds(clock)}</span>
         </div>
 
         <div className={s.arenaTools}>
-          <div className={s.playerDock}>
-            <div ref={hostRef} className={s.playerHost} />
-            <div className={s.playerShield} aria-hidden />
-          </div>
           <button
             type="button"
             className={s.iconBtn}
@@ -527,6 +538,11 @@ export default function Arena() {
         })}
       </div>
 
+      {/* The track plays from here; the player itself stays out of sight. */}
+      <div className={s.playerDock} aria-hidden>
+        <div ref={hostRef} className={s.playerHost} />
+      </div>
+
       {undoable && running && (
         <button type="button" className={s.undoToast} onClick={undo}>
           Undo {undoable}
@@ -534,7 +550,6 @@ export default function Arena() {
       )}
 
       <div className={`${s.curtain} ${dark ? "" : s.curtainLifted}`}>
-        {phase === "loading" && <p className={s.curtainText}>Loading</p>}
         {phase === "countdown" && (
           <div key={count} className={s.countStage}>
             <span className={s.flash} />
@@ -554,11 +569,7 @@ export default function Arena() {
         {phase === "error" && (
           <>
             <p className={s.curtainText}>{errorMsg ?? "Something broke."}</p>
-            <button
-              type="button"
-              className={s.bigBtn}
-              onClick={() => router.push(ROUTES.home)}
-            >
+            <button type="button" className={s.bigBtn} onClick={goHome}>
               Home
             </button>
           </>
@@ -570,7 +581,7 @@ export default function Arena() {
           outcomes={outcomes}
           save={save}
           onRematch={rematch}
-          onHome={() => router.push(ROUTES.home)}
+          onHome={goHome}
           onRetry={() =>
             persist(
               outcomes,
@@ -646,6 +657,7 @@ function Results({
   onHome: () => void;
   onRetry: () => void;
 }) {
+  const celebratedRef = useRef(false);
   const sorted = [...outcomes].sort((a, b) => b.seconds - a.seconds);
   const [first, second] = sorted;
   let verdict: string;
@@ -658,6 +670,20 @@ function Results({
   }
   const bests = save.status === "saved" ? save.data.previousBests : null;
 
+  // Confetti once, for a new personal best or a finished song.
+  useEffect(() => {
+    if (!bests || celebratedRef.current) return;
+    const winners = outcomes.filter((o) => {
+      const prev = bests[o.athlete];
+      return o.completed || prev === null || o.seconds > prev;
+    });
+    if (winners.length === 0) return;
+    celebratedRef.current = true;
+    burstConfetti(
+      winners.map((o) => ATHLETE_COLORS[o.athlete]).concat("#ffffff"),
+    );
+  }, [bests, outcomes]);
+
   return (
     <div className={s.resultsBackdrop}>
       <section className={s.results} aria-label="Session results">
@@ -668,8 +694,10 @@ function Results({
             const prev = bests ? bests[o.athlete] : undefined;
             let note = "";
             let best = false;
-            if (prev === null) note = "First time";
-            else if (typeof prev === "number") {
+            if (prev === null) {
+              note = "First time";
+              best = true;
+            } else if (typeof prev === "number") {
               if (o.seconds > prev) {
                 note = `New best ${formatDelta(o.seconds - prev)}`;
                 best = true;
