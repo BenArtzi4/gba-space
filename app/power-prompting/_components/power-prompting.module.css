@@ -1072,8 +1072,11 @@
 .arena {
   position: fixed;
   inset: 0;
+  z-index: 10;
   display: grid;
   grid-template-rows: auto 1fr;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   background: #000;
   color: var(--text);
   overflow: hidden;
@@ -1178,13 +1181,12 @@
    to play) and must not be display:none — so it sits underneath the two
    halves, invisible and unclickable. */
 .playerDock {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
   z-index: 0;
   width: 240px;
   height: 135px;
-  transform: translate(-50%, -50%);
   opacity: 0.01;
   pointer-events: none;
 }
@@ -1459,7 +1461,7 @@
   z-index: 3;
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(140px, 34vw, 340px);
+  font-size: clamp(120px, 40vmin, 340px);
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.06em;
@@ -1585,6 +1587,117 @@
   }
   100% {
     opacity: 0;
+  }
+}
+
+/* GO burst over the arena the moment the song starts */
+.goBurst {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(96px, 30vmin, 260px);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  color: #fff;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+  animation: ppGoBurst 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes ppGoBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* phone on its side: short, wide viewport — compact bar, big halves */
+@media (max-height: 520px) {
+  .arenaBar {
+    min-height: 44px;
+    padding: 4px 10px 6px;
+    padding-top: max(4px, env(safe-area-inset-top));
+  }
+  .clockDigits {
+    font-size: 28px;
+  }
+  .arenaExit {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .iconBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .split {
+    gap: 4px;
+    padding: 4px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+  }
+  .side {
+    border-radius: 16px;
+  }
+  .sideBody {
+    gap: 4px;
+  }
+  .sideName {
+    font-size: clamp(26px, 9vmin, 52px);
+  }
+  .sideTime {
+    font-size: clamp(30px, 14vmin, 72px);
+  }
+  .sideHint {
+    font-size: 11px;
+  }
+  .undoToast {
+    bottom: 10px;
+    min-height: 40px;
+    font-size: 14px;
+  }
+  .curtainText {
+    font-size: 13px;
+  }
+  .results {
+    padding: 16px 18px 14px;
+    border-radius: 20px;
+  }
+  .resultsTitle {
+    font-size: 20px;
+  }
+  .resultsList {
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .resultRow {
+    padding: 8px 12px;
+  }
+  .resultTime {
+    font-size: 24px;
+  }
+  .saveState {
+    margin-top: 8px;
+  }
+  .resultsActions {
+    margin-top: 10px;
+  }
+  .resultsActions > * {
+    min-height: 42px;
   }
 }
 
@@ -1715,6 +1828,10 @@
   }
   .arena {
     transition: none;
+  }
+  .goBurst {
+    animation: none;
+    opacity: 0;
   }
   .sideStopped .sideSkin {
     animation: none;

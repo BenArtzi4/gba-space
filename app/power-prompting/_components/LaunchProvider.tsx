@@ -10,8 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ROUTES } from "../_lib/challenge";
-import { loadYouTubeApi } from "../_lib/youtube";
+import { LAUNCH_MS, ROUTES } from "../_lib/challenge";
 import BlackHole from "./BlackHole";
 import s from "./power-prompting.module.css";
 
@@ -36,7 +35,7 @@ export function useLaunch() {
 /** Painted size of the orb layers in CSS px (must match --hole-base in CSS). */
 const ORB_BASE = 720;
 /** Total collapse length (must match the CSS keyframe durations). */
-const COLLAPSE_MS = 1050;
+const COLLAPSE_MS = LAUNCH_MS;
 /** Navigate while the screen is already fully black, not at the very end. */
 const NAVIGATE_AT = 0.84;
 const REDUCED_MS = 200;
@@ -45,11 +44,9 @@ export default function LaunchProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [state, setState] = useState<LaunchState | null>(null);
 
-  // Warm both the arena route and the YouTube API so the countdown can pop
-  // the instant the hole closes.
+  // Warm the arena route so the countdown can pop the instant the hole closes.
   useEffect(() => {
     router.prefetch(ROUTES.arena);
-    loadYouTubeApi().catch(() => {});
   }, [router]);
 
   useEffect(() => {
