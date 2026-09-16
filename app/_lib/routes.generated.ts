@@ -6,6 +6,7 @@ export const routeSlugs: string[] = [
   "all",
   "app-arena",
   "chase-medicine",
+  "power-prompting",
   "rosh-hashana-karaoke",
   "spaces",
 ];
