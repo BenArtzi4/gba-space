@@ -6,20 +6,31 @@ import { saveSession, type SaveSessionOutput } from "../actions";
 import {
   ATHLETES,
   ATHLETE_COLORS,
+  COUNTDOWN_SECONDS,
   formatDelta,
   formatSeconds,
+  PLAY_FROM_SECONDS,
   ROUTES,
   SONG_START_SECONDS,
-  VIDEO_ID,
   type Athlete,
 } from "../_lib/challenge";
-import { loadYouTubeApi, YT_STATE, type YTPlayer } from "../_lib/youtube";
+import {
+  getDuration,
+  getTime,
+  hasFailed,
+  isPlaying,
+  pause,
+  play,
+  PLAYER_EVENT,
+  subscribe,
+} from "../_lib/player";
+import { YT_STATE } from "../_lib/youtube";
 import { burstConfetti } from "./confetti";
 import s from "./power-prompting.module.css";
 
 type Phase =
-  | "countdown" // 3-2-1-GO on a black screen (the player warms up meanwhile)
-  | "blocked" // the browser refused to autoplay: needs a tap
+  | "countdown" // the intro plays, 3-2-1 counts down to the song
+  | "blocked" // the browser refused to play without a tap
   | "live" // song playing, clock running
   | "finishing" // everyone stopped: short undo window before we save
   | "finished" // results on screen
@@ -39,44 +50,56 @@ type SaveState =
   | { status: "saved"; data: SaveSessionOutput }
   | { status: "error"; message: string };
 
-const COUNTDOWN_FROM = 3;
 const UNDO_MS = 3000;
 const GRACE_MS = 3000;
 const PLAY_WATCHDOG_MS = 2500;
 const BUFFER_GRACE_MS = 5000;
-const CLOCK_TICK_MS = 100;
+const TICK_MS = 100;
 const CONFIRM_MS = 4000;
 const LEAVE_MS = 220;
+const GO_FLASH_MS = 800;
+const YT_ERROR = "YouTube won't play the track here.";
 
-type TimerKey = "grace" | "undo" | "watchdog" | "confirm" | "leave";
+type TimerKey = "grace" | "undo" | "watchdog" | "confirm" | "leave" | "go";
+
+/** Seconds of the SONG elapsed (video time minus the intro), never negative. */
+function songElapsed(): number {
+  return Math.max(0, getTime() - SONG_START_SECONDS);
+}
+
+/** Length of the song part of the video (0 if unknown yet). */
+function songLength(): number {
+  const d = getDuration();
+  return d > SONG_START_SECONDS ? d - SONG_START_SECONDS : 0;
+}
 
 export default function Arena() {
   const router = useRouter();
-  const hostRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<YTPlayer | null>(null);
-  const playerReadyRef = useRef(false);
-  const goPendingRef = useRef(false);
-  const phaseRef = useRef<Phase>("countdown");
+  // A player that already failed (e.g. on the home page) starts us in error.
+  const [phase, setPhaseState] = useState<Phase>(() =>
+    hasFailed() ? "error" : "countdown",
+  );
+  const phaseRef = useRef<Phase>(phase);
   const stopsRef = useRef<Stops>({});
   const undoableRef = useRef<Athlete | null>(null);
   const startedAtRef = useRef<string | null>(null);
-  const awaitingPlayRef = useRef(false);
-  const songLengthRef = useRef(0);
+  const armedRef = useRef(false); // we asked for playback and await PLAYING
   const timers = useRef<Partial<Record<TimerKey, number>>>({});
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
-  const onStateRef = useRef<(state: number) => void>(() => {});
 
-  const [phase, setPhaseState] = useState<Phase>("countdown");
-  const [count, setCount] = useState(COUNTDOWN_FROM);
+  const [count, setCount] = useState(COUNTDOWN_SECONDS);
   const [clock, setClock] = useState(0);
-  const [songLength, setSongLengthState] = useState(0);
+  const [total, setTotal] = useState(0);
   const [stops, setStopsState] = useState<Stops>({});
   const [undoable, setUndoableState] = useState<Athlete | null>(null);
   const [outcomes, setOutcomes] = useState<Outcome[] | null>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(() =>
+    hasFailed() ? YT_ERROR : null,
+  );
   const [confirmExit, setConfirmExit] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [goFlash, setGoFlash] = useState(false);
   const [round, setRound] = useState(0); // bumps on every GO → replays slam-in
 
   // ── small helpers that keep refs and state in sync ────────────────────────
@@ -92,10 +115,6 @@ export default function Arena() {
     undoableRef.current = a;
     setUndoableState(a);
   }, []);
-  const setSongLength = useCallback((d: number) => {
-    songLengthRef.current = d;
-    setSongLengthState(d);
-  }, []);
   const clearTimer = useCallback((key: TimerKey) => {
     const id = timers.current[key];
     if (id) window.clearTimeout(id);
@@ -109,50 +128,24 @@ export default function Arena() {
     [clearTimer],
   );
 
-  /** Seconds of the SONG elapsed (video time minus the intro). */
-  const elapsed = useCallback((): number => {
-    try {
-      const t = playerRef.current?.getCurrentTime() ?? 0;
-      if (!Number.isFinite(t)) return 0;
-      return Math.max(0, t - SONG_START_SECONDS);
-    } catch {
-      return 0;
-    }
-  }, []);
-
-  /** Length of the song part of the video (0 if unknown). */
-  const readSongLength = useCallback((): number => {
-    try {
-      const d = playerRef.current?.getDuration() ?? 0;
-      if (Number.isFinite(d) && d > SONG_START_SECONDS) {
-        return d - SONG_START_SECONDS;
-      }
-    } catch {
-      /* fall through */
-    }
-    return songLengthRef.current;
-  }, []);
-
   // ── persistence ───────────────────────────────────────────────────────────
-  const persist = useCallback(
-    async (results: Outcome[], songSeconds: number | null) => {
-      setSave({ status: "saving" });
-      try {
-        const data = await saveSession({
-          startedAt: startedAtRef.current ?? new Date().toISOString(),
-          songSeconds,
-          results,
-        });
-        setSave({ status: "saved", data });
-      } catch (e) {
-        setSave({
-          status: "error",
-          message: e instanceof Error ? e.message : "Could not save",
-        });
-      }
-    },
-    [],
-  );
+  const persist = useCallback(async (results: Outcome[]) => {
+    setSave({ status: "saving" });
+    try {
+      const len = songLength();
+      const data = await saveSession({
+        startedAt: startedAtRef.current ?? new Date().toISOString(),
+        songSeconds: len > 0 ? len : null,
+        results,
+      });
+      setSave({ status: "saved", data });
+    } catch (e) {
+      setSave({
+        status: "error",
+        message: e instanceof Error ? e.message : "Could not save",
+      });
+    }
+  }, []);
 
   // ── the session state machine ─────────────────────────────────────────────
   const finish = useCallback(
@@ -161,33 +154,27 @@ export default function Arena() {
       clearTimer("grace");
       clearTimer("undo");
       setUndoable(null);
-      const total = readSongLength();
+      const len = songLength();
       const stopsNow = stopsRef.current;
       const results: Outcome[] = ATHLETES.map((athlete) => {
         const t = stopsNow[athlete];
         if (t !== undefined) {
           return {
             athlete,
-            seconds: total > 0 ? Math.min(t, total) : t,
+            seconds: len > 0 ? Math.min(t, len) : t,
             completed: false,
           };
         }
-        return { athlete, seconds: total, completed: reason === "ended" };
+        return { athlete, seconds: len, completed: reason === "ended" };
       });
-      if (reason !== "ended") {
-        try {
-          playerRef.current?.pauseVideo();
-        } catch {
-          /* ignore */
-        }
-      }
+      if (reason !== "ended") pause();
       setPhase("finished");
       setOutcomes(results);
       // Freeze the big clock on the last recorded time, not the undo window.
       setClock(Math.max(...results.map((r) => r.seconds)));
-      void persist(results, total > 0 ? total : null);
+      void persist(results);
     },
-    [clearTimer, persist, readSongLength, setPhase, setUndoable],
+    [clearTimer, persist, setPhase, setUndoable],
   );
 
   const stop = useCallback(
@@ -195,7 +182,7 @@ export default function Arena() {
       const ph = phaseRef.current;
       if (ph !== "live" && ph !== "finishing") return;
       if (stopsRef.current[athlete] !== undefined) return;
-      const next: Stops = { ...stopsRef.current, [athlete]: elapsed() };
+      const next: Stops = { ...stopsRef.current, [athlete]: songElapsed() };
       setStops(next);
       setUndoable(athlete);
       setTimer("undo", () => setUndoable(null), UNDO_MS);
@@ -209,7 +196,7 @@ export default function Arena() {
         setTimer("grace", () => finish("all-stopped"), GRACE_MS);
       }
     },
-    [elapsed, finish, setPhase, setStops, setTimer, setUndoable],
+    [finish, setPhase, setStops, setTimer, setUndoable],
   );
 
   const undo = useCallback(() => {
@@ -227,39 +214,46 @@ export default function Arena() {
     }
   }, [clearTimer, setPhase, setStops, setUndoable]);
 
-  const startPlayback = useCallback(() => {
-    const p = playerRef.current;
-    if (!p || !playerReadyRef.current) {
-      // The player is still warming up: play the moment it's ready.
-      goPendingRef.current = true;
+  /**
+   * Ask the player to play from the pre-song point. Best called inside a tap
+   * (Start, Play, Rematch). A watchdog turns a refused autoplay into the
+   * "blocked" screen, which offers a tap.
+   */
+  const arm = useCallback(() => {
+    armedRef.current = true;
+    if (!play(PLAY_FROM_SECONDS)) {
+      // Not ready yet: the READY event below will retry.
       return;
     }
-    goPendingRef.current = false;
-    awaitingPlayRef.current = true;
-    try {
-      // Skip the intro: the clock starts with the song.
-      p.seekTo(SONG_START_SECONDS, true);
-      p.playVideo();
-    } catch {
-      /* ignore */
-    }
     const check = (bufferAllowance: number) => {
-      if (!awaitingPlayRef.current || phaseRef.current === "live") return;
-      let state: number = YT_STATE.UNSTARTED;
-      try {
-        state = p.getPlayerState();
-      } catch {
-        /* ignore */
-      }
-      if (state === YT_STATE.BUFFERING && bufferAllowance > 0) {
-        // Slow network rather than a blocked autoplay: give it a bit longer.
+      if (!armedRef.current || phaseRef.current !== "countdown") return;
+      if (isPlaying() && getTime() > 0) return;
+      const state = isPlaying();
+      if (state && bufferAllowance > 0) {
         setTimer("watchdog", () => check(0), bufferAllowance);
         return;
       }
-      if (state !== YT_STATE.PLAYING) setPhase("blocked");
+      setPhase("blocked");
     };
     setTimer("watchdog", () => check(BUFFER_GRACE_MS), PLAY_WATCHDOG_MS);
   }, [setPhase, setTimer]);
+
+  const goLive = useCallback(() => {
+    armedRef.current = false;
+    clearTimer("watchdog");
+    startedAtRef.current = new Date(
+      Date.now() - songElapsed() * 1000,
+    ).toISOString();
+    setRound((r) => r + 1);
+    setGoFlash(true);
+    setTimer("go", () => setGoFlash(false), GO_FLASH_MS);
+    setPhase("live");
+    try {
+      navigator.vibrate?.(30);
+    } catch {
+      /* ignore */
+    }
+  }, [clearTimer, setPhase, setTimer]);
 
   const rematch = useCallback(() => {
     clearTimer("grace");
@@ -271,24 +265,16 @@ export default function Arena() {
     setSave({ status: "idle" });
     setClock(0);
     startedAtRef.current = null;
-    awaitingPlayRef.current = false;
-    try {
-      playerRef.current?.pauseVideo();
-    } catch {
-      /* ignore */
-    }
-    setCount(COUNTDOWN_FROM);
+    setCount(COUNTDOWN_SECONDS);
     setPhase("countdown");
-  }, [clearTimer, setPhase, setStops, setUndoable]);
+    arm(); // inside the Rematch tap → sound allowed
+  }, [arm, clearTimer, setPhase, setStops, setUndoable]);
 
   const goHome = useCallback(() => {
     if (leaving) return;
     setLeaving(true);
-    try {
-      playerRef.current?.pauseVideo();
-    } catch {
-      /* ignore */
-    }
+    pause();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     setTimer("leave", () => router.push(ROUTES.home), LEAVE_MS);
   }, [leaving, router, setTimer]);
 
@@ -303,136 +289,72 @@ export default function Arena() {
     goHome();
   }, [confirmExit, goHome, setTimer]);
 
-  // Player events need the latest handlers without re-creating the player.
-  useEffect(() => {
-    onStateRef.current = (state: number) => {
-      const ph = phaseRef.current;
-      if (state === YT_STATE.PLAYING) {
-        const d = readSongLength();
-        if (d > 0 && d !== songLengthRef.current) setSongLength(d);
-        if (awaitingPlayRef.current) {
-          awaitingPlayRef.current = false;
-          clearTimer("watchdog");
-          const t = elapsed();
-          startedAtRef.current = new Date(Date.now() - t * 1000).toISOString();
-          setRound((r) => r + 1);
-          setPhase("live");
-          try {
-            navigator.vibrate?.(30);
-          } catch {
-            /* ignore */
-          }
-        } else if (ph !== "live" && ph !== "finishing") {
-          // Playback we didn't ask for (e.g. after a seek): keep it parked.
-          try {
-            playerRef.current?.pauseVideo();
-          } catch {
-            /* ignore */
-          }
-        }
-      } else if (state === YT_STATE.ENDED) {
-        if (ph === "live" || ph === "finishing") finish("ended");
-      }
-    };
-  }, [clearTimer, elapsed, finish, readSongLength, setPhase, setSongLength]);
-
-  // ── mount: load the YouTube player while the countdown already runs ──────
+  // ── mount: take over the shared player ────────────────────────────────────
   useEffect(() => {
     // Release the black <html> ground the launch transition set.
     document.documentElement.style.backgroundColor = "";
     router.prefetch(ROUTES.home);
-    const host = hostRef.current;
-    if (!host) return;
-    let cancelled = false;
-    const target = document.createElement("div");
-    host.appendChild(target);
     const timerStore = timers.current;
 
-    loadYouTubeApi()
-      .then((YT) => {
-        if (cancelled) return;
-        playerRef.current = new YT.Player(target, {
-          videoId: VIDEO_ID,
-          width: "100%",
-          height: "100%",
-          playerVars: {
-            controls: 0,
-            disablekb: 1,
-            rel: 0,
-            playsinline: 1,
-            fs: 0,
-            iv_load_policy: 3,
-            origin: window.location.origin,
-          },
-          events: {
-            onReady: (e) => {
-              if (cancelled) return;
-              let d = 0;
-              try {
-                d = e.target.getDuration();
-              } catch {
-                /* ignore */
-              }
-              if (Number.isFinite(d) && d > SONG_START_SECONDS) {
-                setSongLength(d - SONG_START_SECONDS);
-              }
-              playerReadyRef.current = true;
-              if (goPendingRef.current) startPlayback();
-            },
-            onStateChange: (e) => {
-              if (!cancelled) onStateRef.current(e.data);
-            },
-            onError: () => {
-              if (cancelled) return;
-              setErrorMsg("YouTube won't play the track here.");
-              setPhase("error");
-            },
-          },
-        });
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return;
-        setErrorMsg(e instanceof Error ? e.message : "Could not load YouTube.");
+    if (phaseRef.current !== "error") {
+      if (isPlaying()) {
+        // Start already kicked the track off inside its tap: just ride along.
+        armedRef.current = true;
+      } else {
+        // Direct visit (or Start tapped before the player was ready): try.
+        arm();
+      }
+    }
+
+    const unsubscribe = subscribe((event) => {
+      if (event === PLAYER_EVENT.ERROR) {
+        setErrorMsg(YT_ERROR);
         setPhase("error");
-      });
+      } else if (event === PLAYER_EVENT.READY) {
+        if (armedRef.current && !isPlaying()) arm();
+      } else if (event === YT_STATE.ENDED) {
+        const ph = phaseRef.current;
+        if (ph === "live" || ph === "finishing") finish("ended");
+      }
+    });
 
     return () => {
-      cancelled = true;
-      try {
-        playerRef.current?.destroy();
-      } catch {
-        /* ignore */
-      }
-      playerRef.current = null;
-      playerReadyRef.current = false;
-      target.remove();
+      unsubscribe();
       for (const id of Object.values(timerStore)) {
         if (id) window.clearTimeout(id);
       }
       wakeLockRef.current?.release().catch(() => {});
       wakeLockRef.current = null;
     };
-  }, [router, setPhase, setSongLength, startPlayback]);
+  }, [arm, finish, router, setPhase]);
 
-  // ── countdown: 3 → 2 → 1 → GO (play) ──────────────────────────────────────
+  // ── the tick: drives the countdown from the video clock, then the timer ──
+  const ticking =
+    phase === "countdown" || phase === "live" || phase === "finishing";
   useEffect(() => {
-    if (phase !== "countdown") return;
-    if (count > 0) {
-      const id = window.setTimeout(() => setCount((c) => c - 1), 1000);
-      return () => window.clearTimeout(id);
-    }
-    startPlayback();
-  }, [phase, count, startPlayback]);
-
-  // ── the clock ticks while the song plays ──────────────────────────────────
-  const running = phase === "live" || phase === "finishing";
-  useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setClock(elapsed()), CLOCK_TICK_MS);
+    if (!ticking) return;
+    const id = window.setInterval(() => {
+      const t = getTime();
+      const len = songLength();
+      if (len > 0) setTotal((prev) => (prev === len ? prev : len));
+      if (phaseRef.current === "countdown") {
+        if (t >= SONG_START_SECONDS && isPlaying()) {
+          goLive();
+          setClock(songElapsed());
+        } else if (t > 0) {
+          setCount(
+            Math.min(COUNTDOWN_SECONDS, Math.max(1, Math.ceil(SONG_START_SECONDS - t))),
+          );
+        }
+      } else {
+        setClock(songElapsed());
+      }
+    }, TICK_MS);
     return () => window.clearInterval(id);
-  }, [running, elapsed]);
+  }, [ticking, goLive]);
 
   // ── keep the screen awake during the hold ─────────────────────────────────
+  const running = phase === "live" || phase === "finishing";
   useEffect(() => {
     if (!running) return;
     let active = true;
@@ -483,7 +405,7 @@ export default function Arena() {
     }
   }, []);
 
-  const progress = songLength > 0 ? Math.min(1, clock / songLength) : 0;
+  const progress = total > 0 ? Math.min(1, clock / total) : 0;
   const dark = phase === "countdown" || phase === "blocked" || phase === "error";
 
   return (
@@ -538,10 +460,11 @@ export default function Arena() {
         })}
       </div>
 
-      {/* The track plays from here; the player itself stays out of sight. */}
-      <div className={s.playerDock} aria-hidden>
-        <div ref={hostRef} className={s.playerHost} />
-      </div>
+      {goFlash && (
+        <div className={s.goBurst} aria-hidden>
+          GO
+        </div>
+      )}
 
       {undoable && running && (
         <button type="button" className={s.undoToast} onClick={undo}>
@@ -555,14 +478,19 @@ export default function Arena() {
             <span className={s.flash} />
             <span className={s.shock} />
             <span className={`${s.shock} ${s.shockLate}`} />
-            <div className={s.countNum}>{count > 0 ? count : "GO"}</div>
-            <p className={s.curtainText}>
-              {count > 0 ? "Get in position" : "Bring Sally up"}
-            </p>
+            <div className={s.countNum}>{count}</div>
+            <p className={s.curtainText}>Get in position</p>
           </div>
         )}
         {phase === "blocked" && (
-          <button type="button" className={s.bigBtn} onClick={startPlayback}>
+          <button
+            type="button"
+            className={s.bigBtn}
+            onClick={() => {
+              setPhase("countdown");
+              arm();
+            }}
+          >
             ▶ Play
           </button>
         )}
@@ -582,12 +510,7 @@ export default function Arena() {
           save={save}
           onRematch={rematch}
           onHome={goHome}
-          onRetry={() =>
-            persist(
-              outcomes,
-              songLengthRef.current > 0 ? songLengthRef.current : null,
-            )
-          }
+          onRetry={() => persist(outcomes)}
         />
       )}
     </div>

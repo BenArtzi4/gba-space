@@ -19,6 +19,21 @@ export const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
  */
 export const SONG_START_SECONDS = 5.8;
 
+/** Length of the 3-2-1 countdown shown before the song. */
+export const COUNTDOWN_SECONDS = 3;
+/** Duration of the black-hole launch transition (keep in sync with the CSS). */
+export const LAUNCH_MS = 1050;
+/**
+ * Where playback starts when Start is tapped, so that after the launch
+ * transition and the countdown the song begins exactly on cue. Starting the
+ * video inside the tap itself is what lets phones play sound without a
+ * second "Play" tap.
+ */
+export const PLAY_FROM_SECONDS = Math.max(
+  0,
+  SONG_START_SECONDS - COUNTDOWN_SECONDS - LAUNCH_MS / 1000,
+);
+
 /** Routes inside this space. */
 export const ROUTES = {
   home: "/power-prompting",
