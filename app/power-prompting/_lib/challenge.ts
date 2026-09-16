@@ -14,10 +14,11 @@ export const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
 
 /**
  * The second of the video at which the song (and therefore the timer) starts.
- * The video has an intro before the first "bring Sally up"; playback is
- * started here and the survival clock reads `video time − this`.
+ * The video has an intro before the first "bring Sally up"; the survival clock
+ * reads `video time − this`. Tuned by ear (the video's own on-screen timer
+ * starts ~0.5s earlier than the music).
  */
-export const SONG_START_SECONDS = 5.8;
+export const SONG_START_SECONDS = 6.3;
 
 /** Length of the 3-2-1 countdown shown before the song. */
 export const COUNTDOWN_SECONDS = 3;
